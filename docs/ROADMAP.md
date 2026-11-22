@@ -10,7 +10,7 @@ Built in vertical slices so something visible works early. Each milestone lists 
 - [x] ESLint, Prettier, type-check and Vitest wired into `npm run check`
 - [x] Python package `geographer_pipeline` with a CLI entry point
 - [ ] pytest and ruff run green
-- [ ] Content skeleton and architecture doc
+- [x] Content skeleton and architecture doc
 
 ## M1: Walk around
 

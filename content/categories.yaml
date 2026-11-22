@@ -1,0 +1,38 @@
+# Clue categories. Every clue file names one of these ids in its `category` field.
+#
+#   id:             kebab-case, used in folder names and shards
+#   label:          shown in the UI
+#   detector:
+#     mapillary:    Mapillary class values that map to this category
+#     owl:          OWLv2 text prompts, and the score threshold for this category
+#   overlay_colour: outline colour in the viewer
+#   scene:          true for whole-scene clues (soil, vegetation), false for objects
+#
+# Mapillary values come from the map feature docs and still need confirming
+# against real /detections responses before the pipeline relies on them.
+
+- id: bollard
+  label: Bollard
+  detector:
+    owl:
+      prompts: ["a roadside bollard", "a short road delineator post"]
+      threshold: 0.2
+  overlay_colour: "#f59e0b"
+  scene: false
+
+- id: utility-pole
+  label: Utility pole
+  detector:
+    mapillary: [object--support--utility-pole]
+    owl:
+      prompts: ["a utility pole"]
+      threshold: 0.2
+  overlay_colour: "#38bdf8"
+  scene: false
+
+- id: street-light
+  label: Street light
+  detector:
+    mapillary: [object--street-light]
+  overlay_colour: "#a3e635"
+  scene: false
