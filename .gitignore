@@ -1,0 +1,32 @@
+# Local assistant and editor config
+.claude/
+CLAUDE.md
+.mcp.json
+.vscode/
+.idea/
+
+# Secrets
+.env*
+
+# Pipeline cache, downloaded images and crops
+data/
+
+# Node
+node_modules/
+dist/
+coverage/
+*.tsbuildinfo
+.vercel/
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
