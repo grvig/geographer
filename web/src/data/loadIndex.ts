@@ -34,7 +34,11 @@ export function loadCountryList(): Promise<CountryList> {
   return fetchJson(`${dataRoot}/index/countries.json`, countryListSchema);
 }
 
-export function loadCountryIndex(code: string): Promise<CountryIndex> {
+export async function loadCountryIndex(code: string): Promise<CountryIndex> {
+  // The code ends up in a URL, so only plain two-letter codes are accepted.
+  if (!/^[A-Z]{2}$/.test(code)) {
+    throw new DataError(`"${code}" is not a country code`);
+  }
   return fetchJson(`${dataRoot}/index/${code}.json`, countryIndexSchema);
 }
 
