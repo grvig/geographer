@@ -5,3 +5,16 @@ version = "0.1.0"
 description = "Offline detection and matching pipeline for Geographer"
 requires-python = ">=3.11"
 license = "MIT"
+
+[tool.ruff]
+target-version = "py311"
+line-length = 88
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "SIM"]
+# SIM108 suggests ternaries; house style prefers if/else.
+ignore = ["SIM108"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]

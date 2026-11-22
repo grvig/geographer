@@ -9,18 +9,19 @@ Built in vertical slices so something visible works early. Each milestone lists 
 - [x] Vite + React + TypeScript app runs, with Tailwind and React Router
 - [x] ESLint, Prettier, type-check and Vitest wired into `npm run check`
 - [x] Python package `geographer_pipeline` with a CLI entry point
-- [ ] pytest and ruff run green
+- [x] pytest and ruff run green
 - [x] Content skeleton and architecture doc
 
 ## M1: Walk around
 
-- [ ] App layout, not-found page
-- [ ] Country index schema and loader
-- [ ] Country picker, random start point
-- [ ] MapillaryJS viewer with a clear missing-token state
-- [ ] Minimap (MapLibre + OpenFreeMap) with position and heading
-- [ ] Mapillary attribution and "Open in Google Maps" link
-- [ ] Explore page with the image id in the URL
+- [x] App layout, not-found page
+- [x] Country index schema and loader
+- [ ] Country picker
+- [x] Random start point
+- [x] MapillaryJS viewer with a clear missing-token state
+- [x] Minimap (MapLibre + OpenFreeMap) with position and heading
+- [x] Mapillary attribution and "Open in Google Maps" link
+- [x] Explore page with the image id in the URL
 - [ ] Pipeline command that builds `index/<CC>.json` from Mapillary coverage tiles
 - [ ] Loading and error states, keyboard access
 
