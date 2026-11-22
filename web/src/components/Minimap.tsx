@@ -1,6 +1,11 @@
 import { useEffect, useRef } from "react";
-import { Map as MapLibreMap, Marker } from "maplibre-gl";
+import { Map as MapLibreMap, Marker, setWorkerUrl } from "maplibre-gl";
+import workerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?url";
 import "maplibre-gl/dist/maplibre-gl.css";
+
+// MapLibre looks for its worker next to its own module, which breaks once Vite
+// bundles it, so Vite ships the worker file and we point MapLibre at it.
+setWorkerUrl(workerUrl);
 
 // Free OpenFreeMap style: no key, attribution is added by MapLibre from the style.
 const STYLE_URL = "https://tiles.openfreemap.org/styles/liberty";

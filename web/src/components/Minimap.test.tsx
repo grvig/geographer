@@ -9,9 +9,15 @@ const fake = vi.hoisted(() => ({
   setLngLat: vi.fn(),
   setRotation: vi.fn(),
   addTo: vi.fn(),
+  // A plain field, because the worker URL is set once at import and mock call
+  // history is cleared before each test.
+  workerUrl: "",
 }));
 
 vi.mock("maplibre-gl", () => ({
+  setWorkerUrl: (url: string) => {
+    fake.workerUrl = url;
+  },
   Map: vi.fn(function () {
     return { jumpTo: fake.jumpTo, remove: fake.remove };
   }),
@@ -25,6 +31,10 @@ vi.mock("maplibre-gl", () => ({
 }));
 
 describe("Minimap", () => {
+  it("points MapLibre at the bundled worker file", () => {
+    expect(fake.workerUrl).toContain("maplibre-gl-worker");
+  });
+
   it("centres on the position and rotates the heading marker", () => {
     const { rerender, unmount } = render(
       <Minimap lat={12.97} lon={77.59} bearing={0} />,
