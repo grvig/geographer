@@ -4,8 +4,8 @@ Built in vertical slices so something visible works early. Each milestone lists 
 
 ## M0: Scaffold
 
-- [ ] Gitignore, editorconfig, gitattributes, README stub
-- [ ] Licences: MIT for code, CC-BY-SA 4.0 for `content/`
+- [x] Gitignore, editorconfig, gitattributes, README stub
+- [x] Licences: MIT for code, CC-BY-SA 4.0 for `content/`
 - [ ] Vite + React + TypeScript app runs, with Tailwind and React Router
 - [ ] ESLint, Prettier, type-check and Vitest wired into `npm run check`
 - [ ] Python package `geographer_pipeline` with a CLI entry point
