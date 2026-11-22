@@ -4,8 +4,8 @@ export default function HomePage() {
       <h1 className="text-4xl font-bold tracking-tight">Geographer</h1>
       <p className="text-lg text-stone-300">
         Walk around real street-level imagery and learn the clues that give a
-        place away: bollards, utility poles, road markings, sign backs, soil
-        and more.
+        place away: bollards, utility poles, road markings, sign backs, soil and
+        more.
       </p>
       <p className="text-stone-400">
         Pick a country, look around freely, and hover any highlighted object to
