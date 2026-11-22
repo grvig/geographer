@@ -8,8 +8,8 @@ CLAUDE.md
 # Secrets
 .env*
 
-# Pipeline cache, downloaded images and crops
-data/
+# Pipeline cache, downloaded images and crops (repo root only)
+/data/
 
 # Node
 node_modules/
