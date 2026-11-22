@@ -1,0 +1,7 @@
+# Dependencies live in requirements*.txt; this file only configures tools.
+[project]
+name = "geographer-pipeline"
+version = "0.1.0"
+description = "Offline detection and matching pipeline for Geographer"
+requires-python = ">=3.11"
+license = "MIT"

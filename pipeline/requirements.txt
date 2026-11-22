@@ -1,0 +1,6 @@
+# Runtime dependencies. Machine-learning packages (torch, open_clip, transformers)
+# are added with the detection milestone, together with their install notes.
+python-dotenv>=1.0
+PyYAML>=6.0
+jsonschema>=4.23
+requests>=2.32
