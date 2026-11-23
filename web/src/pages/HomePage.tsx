@@ -1,3 +1,5 @@
+import CountryPicker from "../components/CountryPicker";
+
 export default function HomePage() {
   return (
     <section className="mx-auto flex max-w-3xl flex-col gap-6 px-6 py-16">
@@ -11,6 +13,8 @@ export default function HomePage() {
         Pick a country, look around freely, and hover any highlighted object to
         see what it is and where it points to.
       </p>
+      <h2 className="mt-4 text-xl font-semibold">Pick a country</h2>
+      <CountryPicker />
     </section>
   );
 }
