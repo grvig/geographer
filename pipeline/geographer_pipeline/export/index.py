@@ -37,7 +37,8 @@ def sample_image_ids(
 
 def write_json(path: Path, data: dict) -> None:
     text = json.dumps(data, indent=2, ensure_ascii=False)
-    path.write_text(text + "\n", encoding="utf-8")
+    # Plain \n on every OS, so regenerated files don't differ by platform.
+    path.write_text(text + "\n", encoding="utf-8", newline="\n")
 
 
 def write_index(country: Country, ids: list[str], out_dir: Path) -> None:

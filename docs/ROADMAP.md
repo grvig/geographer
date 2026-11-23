@@ -16,19 +16,21 @@ Built in vertical slices so something visible works early. Each milestone lists 
 
 - [x] App layout, not-found page
 - [x] Country index schema and loader
-- [ ] Country picker
-- [x] Random start point
+- [x] Country picker
+- [x] Random start point, and a new random spot on demand (N)
 - [x] MapillaryJS viewer with a clear missing-token state
 - [x] Minimap (MapLibre + OpenFreeMap) with position and heading
 - [x] Mapillary attribution and "Open in Google Maps" link
 - [x] Explore page with the image id in the URL
-- [ ] Pipeline command that builds `index/<CC>.json` from Mapillary coverage tiles
-- [ ] Loading and error states, keyboard access
+- [x] Pipeline command that builds `index/<CC>.json` from Mapillary coverage tiles
+- [x] Loading and error states, keyboard access
+- [x] Start points for India, the US, Brazil, Russia and France
 
 ## M2: Fake highlights
 
-- [ ] Clue JSON Schema and matching zod schemas
-- [ ] `content validate` and `content build` commands
+- [x] Clue and category JSON Schemas
+- [ ] Matching zod schemas in the site
+- [x] `content validate` and `content build` commands
 - [ ] Hand-written sample shard
 - [ ] Outlines drawn with the TagComponent, colour-coded by category
 - [ ] Hover card: descriptor, meaning, regions, confidence, reference, look-alikes

@@ -1,18 +1,21 @@
-"""``python -m geographer_pipeline.content validate``: check the clue database."""
+"""``python -m geographer_pipeline.content validate|build``: the clue database."""
 
 import argparse
 import sys
 
+from geographer_pipeline.content.build import build
 from geographer_pipeline.content.validate import CONTENT_DIR, load_clues
 
 
 def main(argv: list[str] | None = None, content_dir=CONTENT_DIR) -> int:
     parser = argparse.ArgumentParser(
         prog="geographer_pipeline.content",
-        description="Check the clue database in content/.",
+        description="Check the clue database in content/, or build clues.json.",
     )
-    parser.add_argument("command", choices=["validate"])
-    parser.parse_args(argv)
+    parser.add_argument("command", choices=["validate", "build"])
+    args = parser.parse_args(argv)
+    if args.command == "build":
+        return build(content_dir)
     clues, errors = load_clues(content_dir)
     for error in errors:
         print(error, file=sys.stderr)
