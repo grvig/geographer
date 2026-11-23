@@ -1,0 +1,115 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/grvig/geographer/blob/main/content/schema/clue.schema.json",
+  "title": "Clue",
+  "description": "One geography clue, stored as content/clues/<category>/<id>.yaml.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "category",
+    "title",
+    "visual",
+    "signifies",
+    "regions",
+    "status"
+  ],
+  "properties": {
+    "id": {
+      "description": "Kebab-case and unique. Starts with the country code it is most typical of.",
+      "$ref": "#/$defs/clueId"
+    },
+    "category": {
+      "description": "An id from content/categories.yaml.",
+      "type": "string",
+      "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+    },
+    "title": { "type": "string", "minLength": 1, "maxLength": 80 },
+    "visual": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["description", "features"],
+      "properties": {
+        "description": {
+          "description": "What it looks like, nothing else. Used for text matching.",
+          "type": "string",
+          "minLength": 10
+        },
+        "features": {
+          "description": "Short visual tags shown in the card.",
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "signifies": { "type": "string", "minLength": 1 },
+    "regions": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/region" }
+    },
+    "lookalikes": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/clueId" }
+    },
+    "tell_apart": {
+      "description": "How to tell this clue from its look-alikes.",
+      "type": "string",
+      "minLength": 1
+    },
+    "references": { "type": "array", "items": { "$ref": "#/$defs/reference" } },
+    "sources": { "type": "array", "items": { "$ref": "#/$defs/source" } },
+    "status": { "enum": ["draft", "reviewed"] }
+  },
+  "$defs": {
+    "clueId": {
+      "type": "string",
+      "pattern": "^[a-z]{2}-[a-z0-9]+(-[a-z0-9]+)*$"
+    },
+    "region": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["country", "strength"],
+      "properties": {
+        "country": { "type": "string", "pattern": "^[A-Z]{2}$" },
+        "admin1": {
+          "description": "State or province, spelled as the offline reverse geocoder spells it.",
+          "type": "string",
+          "minLength": 1
+        },
+        "area": { "type": "string", "minLength": 1 },
+        "strength": { "enum": ["only", "typical", "also-seen"] }
+      }
+    },
+    "reference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["file", "mapillary_image_id", "creator", "captured_at"],
+      "properties": {
+        "file": {
+          "description": "Path under content/refs/.",
+          "type": "string",
+          "pattern": "^[a-z0-9-]+/[a-z0-9_-]+\\.(jpg|png|webp)$"
+        },
+        "mapillary_image_id": { "type": "string", "pattern": "^[0-9]+$" },
+        "creator": { "type": "string", "minLength": 1 },
+        "captured_at": {
+          "type": "string",
+          "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+        }
+      }
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["title", "url"],
+      "properties": {
+        "title": { "type": "string", "minLength": 1 },
+        "url": { "type": "string", "pattern": "^https://" }
+      }
+    }
+  }
+}
