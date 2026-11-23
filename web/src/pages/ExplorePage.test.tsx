@@ -36,6 +36,21 @@ describe("ExplorePage", () => {
     expect(fetch).not.toHaveBeenCalled();
   });
 
+  it("jumps to a new random spot when N is pressed", async () => {
+    stubFetch(200, {
+      schema_version: 1,
+      country: "IN",
+      name: "India",
+      bbox: [68, 6, 97, 35],
+      images: ["777"],
+    });
+    renderRoute("/explore/in?image=555");
+    fireEvent.keyDown(window, { key: "n", ctrlKey: true });
+    expect(screen.getByText("viewer at 555")).toBeInTheDocument();
+    fireEvent.keyDown(window, { key: "n" });
+    expect(await screen.findByText("viewer at 777")).toBeInTheDocument();
+  });
+
   it("explains when a country has no data", async () => {
     stubFetch(404, {});
     renderRoute("/explore/zz");

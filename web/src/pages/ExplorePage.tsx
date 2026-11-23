@@ -52,6 +52,26 @@ export default function ExplorePage() {
     setAttempt(attempt + 1);
   }
 
+  // Dropping the image from the URL makes the effect above pick a new one.
+  // It is a history push, so Back returns to the previous spot.
+  const jumpToRandomSpot = useCallback(() => {
+    setSearchParams({});
+  }, [setSearchParams]);
+
+  useEffect(() => {
+    function handleKey(event: KeyboardEvent) {
+      const typing = event.target instanceof HTMLInputElement;
+      const modified = event.ctrlKey || event.metaKey || event.altKey;
+      if (event.key === "n" && !typing && !modified) {
+        jumpToRandomSpot();
+      }
+    }
+    window.addEventListener("keydown", handleKey);
+    return () => {
+      window.removeEventListener("keydown", handleKey);
+    };
+  }, [jumpToRandomSpot]);
+
   // Keep the URL on the current image so the view can be shared or reloaded.
   const handleImageChange = useCallback(
     (next: ViewerImage) => {
@@ -106,6 +126,13 @@ export default function ExplorePage() {
           <div className="h-56 overflow-hidden rounded">
             <Minimap lat={image.lat} lon={image.lon} bearing={bearing} />
           </div>
+          <button
+            type="button"
+            onClick={jumpToRandomSpot}
+            className="rounded border border-stone-600 px-3 py-1.5 text-left hover:border-accent"
+          >
+            New random spot <kbd className="text-stone-400">N</kbd>
+          </button>
           <GoogleMapsLink lat={image.lat} lon={image.lon} />
           <MapillaryCredit imageId={image.id} creator={image.creator} />
         </aside>
