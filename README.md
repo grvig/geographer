@@ -18,14 +18,56 @@ This is a learning tool, not a game: no scores, no rounds, no timers.
 
 ## Repository layout
 
-| Folder      | What it holds                                         |
-| ----------- | ----------------------------------------------------- |
-| `web/`      | The static site (TypeScript, React, Vite)             |
-| `pipeline/` | The offline detection and matching pipeline (Python)  |
-| `content/`  | The clue database and reference images                |
-| `docs/`     | Roadmap and architecture notes                        |
+| Folder      | What it holds                                        |
+| ----------- | ---------------------------------------------------- |
+| `web/`      | The static site (TypeScript, React, Vite)            |
+| `pipeline/` | The offline detection and matching pipeline (Python) |
+| `content/`  | The clue database and reference images               |
+| `docs/`     | Roadmap and architecture notes                       |
 
-Setup instructions will follow as each part lands.
+## Setup
+
+Both parts need a Mapillary client token. Register an application with read access at
+<https://www.mapillary.com/dashboard/developers> and copy its client token (it starts with `MLY|`).
+Client tokens are meant to be used in the browser, but keep them out of git: the env files below are ignored.
+
+### Website
+
+Needs Node 22.14 or newer.
+
+```sh
+cd web
+npm install
+cp .env.example .env.local   # then set VITE_MAPILLARY_TOKEN
+npm run dev
+```
+
+`npm run check` runs the type check, lint, format check and tests.
+
+### Pipeline
+
+Needs Python 3.11 or newer. Keep the virtual environment outside any synced folder, since the
+machine-learning packages are several gigabytes.
+
+```sh
+python -m venv ~/.venvs/geographer
+source ~/.venvs/geographer/bin/activate   # Windows: ~/.venvs/geographer/Scripts/activate
+pip install -r pipeline/requirements.txt -r pipeline/requirements-dev.txt
+echo "MAPILLARY_TOKEN=MLY|..." > pipeline/.env
+```
+
+Run commands from `pipeline/`:
+
+```sh
+python -m geographer_pipeline index         # start points for every country in areas.yaml
+python -m geographer_pipeline index IN FR   # or just some of them
+pytest && ruff check . && ruff format --check .
+```
+
+### Deploying
+
+The site deploys to Vercel with `web/` as the project's root directory. `web/vercel.json` serves
+`index.html` for every page route, while files under `/data/` return a real 404 when missing.
 
 ## Licences
 
