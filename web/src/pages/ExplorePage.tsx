@@ -1,16 +1,21 @@
 import { useCallback, useEffect, useState } from "react";
-import { useParams, useSearchParams } from "react-router";
+import { Link, useParams, useSearchParams } from "react-router";
 import GoogleMapsLink from "../components/GoogleMapsLink";
 import MapillaryCredit from "../components/MapillaryCredit";
 import Minimap from "../components/Minimap";
-import { loadCountryIndex, pickRandomImage } from "../data/loadIndex";
+import {
+  DataError,
+  loadCountryIndex,
+  pickRandomImage,
+} from "../data/loadIndex";
 import MapillaryViewer, { type ViewerImage } from "../viewer/MapillaryViewer";
 
 export default function ExplorePage() {
   const country = (useParams().country ?? "").toUpperCase();
   const [searchParams, setSearchParams] = useSearchParams();
   const imageId = searchParams.get("image");
-  const [error, setError] = useState<string | null>(null);
+  const [failure, setFailure] = useState<"missing" | "offline" | null>(null);
+  const [attempt, setAttempt] = useState(0);
   const [image, setImage] = useState<ViewerImage | null>(null);
   const [bearing, setBearing] = useState(0);
 
@@ -26,15 +31,26 @@ export default function ExplorePage() {
           setSearchParams({ image: pickRandomImage(index) }, { replace: true });
         }
       })
-      .catch(() => {
-        if (!cancelled) {
-          setError(`There is no explorable imagery for "${country}" yet.`);
+      .catch((error: unknown) => {
+        if (cancelled) {
+          return;
+        }
+        // A missing file can come back as the app's HTML page, which fails to parse.
+        if (error instanceof DataError || error instanceof SyntaxError) {
+          setFailure("missing");
+        } else {
+          setFailure("offline");
         }
       });
     return () => {
       cancelled = true;
     };
-  }, [country, imageId, setSearchParams]);
+  }, [country, imageId, setSearchParams, attempt]);
+
+  function retry() {
+    setFailure(null);
+    setAttempt(attempt + 1);
+  }
 
   // Keep the URL on the current image so the view can be shared or reloaded.
   const handleImageChange = useCallback(
@@ -45,11 +61,28 @@ export default function ExplorePage() {
     [setSearchParams],
   );
 
-  if (error) {
+  if (failure === "missing") {
     return (
-      <p role="alert" className="m-auto p-6 text-stone-300">
-        {error}
-      </p>
+      <div role="alert" className="m-auto p-6 text-stone-300">
+        <p>There is no imagery to explore for "{country}" yet.</p>
+        <Link to="/" className="text-accent underline">
+          Choose another country
+        </Link>
+      </div>
+    );
+  }
+  if (failure === "offline") {
+    return (
+      <div role="alert" className="m-auto p-6 text-stone-300">
+        <p>The starting points didn't load. Check your connection.</p>
+        <button
+          type="button"
+          onClick={retry}
+          className="mt-2 rounded border border-stone-600 px-3 py-1 hover:border-accent"
+        >
+          Try again
+        </button>
+      </div>
     );
   }
   if (!imageId) {
