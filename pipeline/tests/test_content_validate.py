@@ -2,6 +2,7 @@ import shutil
 
 import pytest
 
+from geographer_pipeline.content.__main__ import main as content_main
 from geographer_pipeline.content.validate import CONTENT_DIR, load_categories
 
 
@@ -21,6 +22,11 @@ def test_shipped_categories_are_valid():
     categories, errors = load_categories()
     assert errors == []
     assert "bollard" in [category["id"] for category in categories]
+
+
+def test_validate_command_passes_on_shipped_content(capsys):
+    assert content_main(["validate"]) == 0
+    assert "clues are valid" in capsys.readouterr().out
 
 
 def test_category_schema_errors_name_the_field(content):
