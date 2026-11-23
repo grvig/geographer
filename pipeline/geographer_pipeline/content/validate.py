@@ -58,6 +58,7 @@ def load_clues(content_dir: Path = CONTENT_DIR) -> tuple[list[dict], list[str]]:
             errors.append(f"{label}: unknown category {clue['category']}")
         if clue_id in files_by_id:
             errors.append(f"{label}: id {clue_id} is used by {files_by_id[clue_id]}")
+            continue
         files_by_id[clue_id] = label
         for reference in clue.get("references", []):
             if not (content_dir / "refs" / reference["file"]).is_file():

@@ -1,9 +1,14 @@
 import shutil
 
 import pytest
+import yaml
 
 from geographer_pipeline.content.__main__ import main as content_main
-from geographer_pipeline.content.validate import CONTENT_DIR, load_categories
+from geographer_pipeline.content.validate import (
+    CONTENT_DIR,
+    load_categories,
+    load_clues,
+)
 
 
 @pytest.fixture
@@ -35,6 +40,74 @@ def test_category_schema_errors_name_the_field(content):
     assert any("0/id" in error for error in errors)
     assert any("0/overlay_colour" in error for error in errors)
     assert any("'scene' is a required property" in error for error in errors)
+
+
+@pytest.fixture
+def clues_dir(tmp_path):
+    """Real schemas and categories, plus a helper that writes one clue file."""
+    shutil.copytree(CONTENT_DIR / "schema", tmp_path / "schema")
+    shutil.copy(CONTENT_DIR / "categories.yaml", tmp_path)
+
+    def write(file_name, folder="bollard", **fields):
+        clue = {
+            "id": file_name.removesuffix(".yaml"),
+            "category": "bollard",
+            "title": "Test bollard",
+            "visual": {"description": "A plain white bollard", "features": ["white"]},
+            "signifies": "Test",
+            "regions": [{"country": "IN", "strength": "typical"}],
+            "status": "draft",
+        }
+        clue.update(fields)
+        path = tmp_path / "clues" / folder / file_name
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(yaml.safe_dump(clue), encoding="utf-8")
+
+    return tmp_path, write
+
+
+def test_valid_clues_with_lookalikes_and_references_pass(clues_dir):
+    root, write = clues_dir
+    reference = {"file": "in-a/01.jpg", "mapillary_image_id": "1", "creator": "x"}
+    reference["captured_at"] = "2024-01-02"
+    write("in-a.yaml", lookalikes=["fr-b"], references=[reference])
+    write("fr-b.yaml", lookalikes=["in-a"])
+    (root / "refs" / "in-a").mkdir(parents=True)
+    (root / "refs" / "in-a" / "01.jpg").write_bytes(b"")
+    clues, errors = load_clues(root)
+    assert errors == []
+    assert [clue["id"] for clue in clues] == ["fr-b", "in-a"]
+
+
+def test_cross_file_rules_are_reported(clues_dir):
+    root, write = clues_dir
+    reference = {"file": "in-a/01.jpg", "mapillary_image_id": "1", "creator": "x"}
+    reference["captured_at"] = "2024-01-02"
+    write("in-a.yaml", lookalikes=["in-a", "zz-missing"], references=[reference])
+    write("in-b.yaml", id="in-a")
+    write("in-c.yaml", folder="poles", category="poles")
+    _, errors = load_clues(root)
+    assert errors == [
+        "clues/bollard/in-a.yaml: missing refs/in-a/01.jpg",
+        "clues/bollard/in-b.yaml: file name must match the id in-a",
+        "clues/bollard/in-b.yaml: id in-a is used by clues/bollard/in-a.yaml",
+        "clues/poles/in-c.yaml: unknown category poles",
+        "clues/bollard/in-a.yaml: a clue can't be its own look-alike",
+        "clues/bollard/in-a.yaml: unknown look-alike zz-missing",
+    ]
+
+
+def test_bad_yaml_and_schema_errors_are_reported(clues_dir):
+    root, write = clues_dir
+    write("in-a.yaml", status="final")
+    write("in-b.yaml", folder="utility-pole")
+    (root / "clues" / "bollard" / "in-c.yaml").write_text("id: [unclosed\n")
+    _, errors = load_clues(root)
+    assert errors[0] == "clues/bollard/in-a.yaml: status: 'final' is not one of " + (
+        "['draft', 'reviewed']"
+    )
+    assert errors[1].startswith("clues/bollard/in-c.yaml: not valid YAML")
+    assert errors[2] == "clues/utility-pole/in-b.yaml: belongs in clues/bollard/"
 
 
 def test_duplicate_category_ids_are_reported(content):
