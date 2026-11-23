@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "countries": [
+    {
+      "code": "IN",
+      "name": "India",
+      "image_count": 500
+    },
+    {
+      "code": "US",
+      "name": "United States",
+      "image_count": 500
+    },
+    {
+      "code": "BR",
+      "name": "Brazil",
+      "image_count": 500
+    },
+    {
+      "code": "RU",
+      "name": "Russia",
+      "image_count": 500
+    },
+    {
+      "code": "FR",
+      "name": "France",
+      "image_count": 500
+    }
+  ]
+}
