@@ -14,8 +14,34 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--version", action="version", version=f"%(prog)s {__version__}"
     )
-    parser.add_subparsers(dest="command", metavar="<command>")
+    commands = parser.add_subparsers(dest="command", metavar="<command>")
+    index = commands.add_parser("index", help="list start points for each country")
+    index.add_argument("countries", nargs="*", help="country codes (default: all)")
+    index.add_argument("--tiles-per-area", type=int, default=5)
+    index.add_argument("--limit", type=int, default=500, help="start points each")
+    index.add_argument("--seed", type=int, default=0)
     return parser
+
+
+def run_index(args: argparse.Namespace) -> int:
+    from geographer_pipeline.areas import load_countries
+    from geographer_pipeline.export.index import INDEX_DIR, build_indexes
+    from geographer_pipeline.mapillary.client import MapillaryClient, load_token
+
+    countries = load_countries()
+    if args.countries:
+        wanted = [code.upper() for code in args.countries]
+        countries = [country for country in countries if country.code in wanted]
+        if len(countries) != len(wanted):
+            print(f"Unknown country code in {wanted}; see pipeline/areas.yaml")
+            return 2
+    client = MapillaryClient(load_token())
+    failed = build_indexes(
+        client, countries, INDEX_DIR, args.tiles_per_area, args.limit, args.seed
+    )
+    if failed:
+        return 1
+    return 0
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -24,6 +50,8 @@ def main(argv: list[str] | None = None) -> int:
     if args.command is None:
         parser.print_help()
         return 1
+    if args.command == "index":
+        return run_index(args)
     return 0
 
 

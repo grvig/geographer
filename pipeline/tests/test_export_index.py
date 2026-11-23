@@ -1,9 +1,10 @@
+import json
 import random
 
 import mapbox_vector_tile
 
 from geographer_pipeline.areas import Area, Country
-from geographer_pipeline.export.index import sample_image_ids
+from geographer_pipeline.export.index import build_indexes, sample_image_ids
 from geographer_pipeline.mapillary.tiles import tile_to_lonlat, tile_xy
 
 # An area just inside one tile, so no neighbouring tile is sampled.
@@ -42,3 +43,28 @@ def test_area_without_images_gives_no_ids():
     empty = Area("Nowhere", [0, 0, 0.01, 0.01])
     rng = random.Random(0)
     assert sample_image_ids(FakeClient(), country("XX", [empty]), 1, 5, rng) == []
+
+
+def read(path):
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+def test_writes_index_and_updates_country_list_in_place(tmp_path):
+    areas = [Area("A", TILE_BBOX)]
+    assert build_indexes(FakeClient(), [country("IN", areas)], tmp_path, 1, 3, 0) == 0
+    build_indexes(FakeClient(), [country("FR", areas)], tmp_path, 1, 3, 0)
+    build_indexes(FakeClient(), [country("IN", areas)], tmp_path, 1, 4, 0)
+    index = read(tmp_path / "IN.json")
+    assert index["schema_version"] == 1
+    assert index["bbox"] == [-180, -90, 180, 90]
+    assert len(index["images"]) == 4
+    assert read(tmp_path / "countries.json")["countries"] == [
+        {"code": "IN", "name": "Country IN", "image_count": 4},
+        {"code": "FR", "name": "Country FR", "image_count": 3},
+    ]
+
+
+def test_country_without_images_is_reported_not_written(tmp_path):
+    empty = Area("Nowhere", [0, 0, 0.01, 0.01])
+    assert build_indexes(FakeClient(), [country("XX", [empty])], tmp_path, 1, 5, 0) == 1
+    assert not (tmp_path / "XX.json").exists()
