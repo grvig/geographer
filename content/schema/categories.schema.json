@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/grvig/geographer/blob/main/content/schema/categories.schema.json",
+  "title": "Categories",
+  "description": "The clue categories in content/categories.yaml.",
+  "type": "array",
+  "minItems": 1,
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["id", "label", "detector", "overlay_colour", "scene"],
+    "properties": {
+      "id": { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$" },
+      "label": { "type": "string", "minLength": 1 },
+      "detector": {
+        "description": "Where detections come from: Mapillary classes, OWLv2 prompts, or both.",
+        "type": "object",
+        "additionalProperties": false,
+        "minProperties": 1,
+        "properties": {
+          "mapillary": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string",
+              "pattern": "^[a-z0-9-]+(--[a-z0-9-]+)+$"
+            }
+          },
+          "owl": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["prompts", "threshold"],
+            "properties": {
+              "prompts": {
+                "type": "array",
+                "minItems": 1,
+                "items": { "type": "string", "minLength": 1 }
+              },
+              "threshold": {
+                "type": "number",
+                "exclusiveMinimum": 0,
+                "maximum": 1
+              }
+            }
+          }
+        }
+      },
+      "overlay_colour": { "type": "string", "pattern": "^#[0-9a-f]{6}$" },
+      "scene": { "type": "boolean" }
+    }
+  }
+}
