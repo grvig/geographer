@@ -8,6 +8,12 @@ import {
 
 export class DataError extends Error {
   name = "DataError";
+  status: number | null;
+
+  constructor(message: string, status: number | null = null) {
+    super(message);
+    this.status = status;
+  }
 }
 
 export const dataRoot = `${import.meta.env.BASE_URL}data`;
@@ -18,7 +24,10 @@ export async function fetchJson<T>(
 ): Promise<T> {
   const response = await fetch(url);
   if (!response.ok) {
-    throw new DataError(`Could not load ${url} (HTTP ${response.status})`);
+    throw new DataError(
+      `Could not load ${url} (HTTP ${response.status})`,
+      response.status,
+    );
   }
   const body: unknown = await response.json();
   const result = schema.safeParse(body);
