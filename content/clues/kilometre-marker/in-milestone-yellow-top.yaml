@@ -1,0 +1,16 @@
+id: in-milestone-yellow-top
+category: kilometre-marker
+title: Milestone with a yellow top
+visual:
+  description: "A short white roadside stone with a rounded top section painted yellow"
+  features: [white stone body, yellow rounded top]
+signifies: "Marks distance along a National Highway. The colour of the top tells you the class of road."
+regions:
+  - country: IN
+    strength: typical
+lookalikes: [in-milestone-green-top]
+tell_apart: "Check the colour of the top: yellow for National Highways, green for State Highways."
+sources:
+  - title: "Plonk It: India"
+    url: https://www.plonkit.net/india
+status: draft

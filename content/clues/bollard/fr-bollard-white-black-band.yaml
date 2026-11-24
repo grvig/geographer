@@ -1,0 +1,14 @@
+id: fr-bollard-white-black-band
+category: bollard
+title: White bollard with a slanted black band
+visual:
+  description: "A white roadside post with a black band slanting across it near the top and a small red reflector"
+  features: [white post, slanted black band, red reflector]
+signifies: "The usual roadside bollard in France. Spotting one is a strong hint that you are in France."
+regions:
+  - country: FR
+    strength: typical
+sources:
+  - title: "Plonk It: France"
+    url: https://www.plonkit.net/france
+status: draft
