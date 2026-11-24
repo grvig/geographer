@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "sequence": "g28ubs700okq1pa8ck9b3b",
+  "images": [
+    {
+      "id": "307508814418051",
+      "lat": 47.297582513308,
+      "lon": 4.24337563009,
+      "country": "FR",
+      "admin1": "Bourgogne",
+      "is_pano": false,
+      "detections": [
+        {
+          "id": "d1",
+          "category": "bollard",
+          "source": "manual",
+          "shape": { "type": "rect", "coords": [0.752, 0.447, 0.774, 0.596] },
+          "clue": "fr-bollard-white-black-band",
+          "confidence": 0.82,
+          "alternatives": [],
+          "consistent": true,
+          "verified": true
+        },
+        {
+          "id": "d2",
+          "category": "bollard",
+          "source": "manual",
+          "shape": { "type": "rect", "coords": [0.519, 0.397, 0.529, 0.447] },
+          "clue": "fr-bollard-white-black-band",
+          "confidence": 0.55,
+          "alternatives": [],
+          "consistent": true,
+          "verified": false
+        },
+        {
+          "id": "d3",
+          "category": "utility-pole",
+          "source": "manual",
+          "shape": { "type": "rect", "coords": [0.672, 0.096, 0.745, 0.372] },
+          "clue": null,
+          "confidence": 0.4,
+          "alternatives": [],
+          "consistent": null,
+          "verified": false
+        }
+      ],
+      "scene": []
+    }
+  ]
+}

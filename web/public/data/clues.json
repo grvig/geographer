@@ -30,16 +30,16 @@
     {
       "id": "fr-bollard-white-black-band",
       "category": "bollard",
-      "title": "White bollard with a slanted black band",
+      "title": "White bollard with a dark band",
       "visual": {
-        "description": "A white roadside post with a black band slanting across it near the top and a small red reflector",
+        "description": "A white roadside post with a sloped top and a dark band near the top that holds a reflector",
         "features": [
           "white post",
-          "slanted black band",
-          "red reflector"
+          "sloped top",
+          "dark band near the top"
         ]
       },
-      "signifies": "The usual roadside bollard in France. Spotting one is a strong hint that you are in France.",
+      "signifies": "The usual roadside bollard on French country roads. Spotting one is a strong hint that you are in France.",
       "regions": [
         {
           "country": "FR",
