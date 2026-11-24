@@ -129,6 +129,18 @@ describe("ExplorePage highlights", () => {
     expect(screen.queryByRole("article")).not.toBeInTheDocument();
   });
 
+  it("hides outlines with H and narrows them with the filters", async () => {
+    await openImage();
+    fireEvent.keyDown(window, { key: "h" });
+    expect(screen.getByText("0 outlines")).toBeInTheDocument();
+    fireEvent.keyDown(window, { key: "h" });
+    expect(screen.getByText("2 outlines")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByLabelText("Checked by hand only"));
+    expect(screen.getByText("0 outlines")).toBeInTheDocument();
+    expect(screen.getByText(/hidden by the filters/)).toBeInTheDocument();
+  });
+
   it("pins a card when an object is picked from the In view list", async () => {
     await openImage();
     fireEvent.click(screen.getByRole("button", { name: /French bollard/ }));

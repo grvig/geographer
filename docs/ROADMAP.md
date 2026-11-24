@@ -29,16 +29,18 @@ Built in vertical slices so something visible works early. Each milestone lists 
 ## M2: Fake highlights
 
 - [x] Clue and category JSON Schemas
-- [ ] Matching zod schemas in the site
-- [x] `content validate` and `content build` commands
-- [ ] Hand-written sample shard
-- [ ] Outlines drawn with the TagComponent, colour-coded by category
-- [ ] Hover card: descriptor, meaning, regions, confidence, reference, look-alikes
-- [ ] Click to pin a card
-- [ ] "In view" sidebar
-- [ ] Filters: categories, minimum confidence, verified only
-- [ ] Keyboard shortcut H toggles highlights
-- [ ] "No analysis for this image yet" state
+- [x] Matching zod schemas in the site
+- [x] `content validate` and `content build` commands, with admin1 spelling checks
+- [x] First draft clues (Indian milestones, French bollard)
+- [x] Hand-written sample shard
+- [x] Outlines drawn with the TagComponent, colour-coded by category
+- [x] Hover card: descriptor, meaning, regions, confidence, look-alikes, location warning
+- [ ] Reference photo next to the scene crop in the card (needs references from M5)
+- [x] Click to pin a card
+- [x] "In view" sidebar
+- [x] Filters: categories, minimum confidence, verified only
+- [x] Keyboard shortcut H toggles highlights
+- [x] "No analysis for this image yet" state
 
 ## M3: Real detections
 

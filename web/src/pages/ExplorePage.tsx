@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router";
+import FilterPanel from "../components/FilterPanel";
 import FloatingCard, { type CardState } from "../components/FloatingCard";
 import GoogleMapsLink from "../components/GoogleMapsLink";
 import InViewList from "../components/InViewList";
@@ -12,6 +13,11 @@ import {
 } from "../data/loadIndex";
 import type { Detection } from "../data/shardSchema";
 import { placeCard } from "../lib/cardPlacement";
+import {
+  DEFAULT_FILTERS,
+  filterDetections,
+  type Filters,
+} from "../lib/filterDetections";
 import MapillaryViewer, {
   type Hover,
   type ViewerImage,
@@ -29,7 +35,23 @@ export default function ExplorePage() {
   const [image, setImage] = useState<ViewerImage | null>(null);
   const [bearing, setBearing] = useState(0);
   const analysis = useAnalysis(country, image);
-  const detections = analysis?.image?.detections ?? NO_DETECTIONS;
+  const [filters, setFilters] = useState<Filters>(DEFAULT_FILTERS);
+  const [highlightsOn, setHighlightsOn] = useState(true);
+  const allDetections = analysis?.image?.detections ?? NO_DETECTIONS;
+  const detections = useMemo(
+    () => filterDetections(allDetections, filters),
+    [allDetections, filters],
+  );
+  let outlined = NO_DETECTIONS;
+  if (highlightsOn) {
+    outlined = detections;
+  }
+  // Only the categories this image has are worth offering as filters.
+  const categoriesHere = useMemo(() => {
+    const ids = new Set(allDetections.map((detection) => detection.category));
+    const known = analysis?.library?.categories;
+    return [...ids].flatMap((id) => known?.get(id) ?? []);
+  }, [allDetections, analysis]);
   const categoryColours = useMemo(() => {
     const colours = new Map<string, string>();
     for (const category of analysis?.library?.categories.values() ?? []) {
@@ -126,6 +148,9 @@ export default function ExplorePage() {
       if (event.key === "n" && !typing && !modified) {
         jumpToRandomSpot();
       }
+      if (event.key === "h" && !typing && !modified) {
+        setHighlightsOn((on) => !on);
+      }
       if (event.key === "Escape") {
         setCard(null);
       }
@@ -182,7 +207,7 @@ export default function ExplorePage() {
       <div ref={viewerBoxRef} className="relative min-w-0 flex-1">
         <MapillaryViewer
           imageId={imageId}
-          detections={detections}
+          detections={outlined}
           categoryColours={categoryColours}
           onImageChange={handleImageChange}
           onBearingChange={setBearing}
@@ -199,7 +224,7 @@ export default function ExplorePage() {
         )}
       </div>
       {image && (
-        <aside className="flex w-72 flex-col gap-3 border-l border-stone-800 p-3">
+        <aside className="flex w-72 flex-col gap-3 overflow-y-auto border-l border-stone-800 p-3">
           <div className="h-56 overflow-hidden rounded">
             <Minimap lat={image.lat} lon={image.lon} bearing={bearing} />
           </div>
@@ -209,6 +234,23 @@ export default function ExplorePage() {
             selectedId={card?.detectionId ?? null}
             onSelect={handleListSelect}
           />
+          {categoriesHere.length > 0 && (
+            <>
+              <button
+                type="button"
+                aria-pressed={!highlightsOn}
+                onClick={() => setHighlightsOn(!highlightsOn)}
+                className="rounded border border-stone-600 px-3 py-1.5 text-left hover:border-accent"
+              >
+                Hide highlights <kbd className="text-stone-400">H</kbd>
+              </button>
+              <FilterPanel
+                categories={categoriesHere}
+                filters={filters}
+                onChange={setFilters}
+              />
+            </>
+          )}
           <button
             type="button"
             onClick={jumpToRandomSpot}
