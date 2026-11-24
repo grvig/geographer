@@ -1,0 +1,118 @@
+{
+  "schema_version": 1,
+  "categories": [
+    {
+      "id": "bollard",
+      "label": "Bollard",
+      "overlay_colour": "#f59e0b",
+      "scene": false
+    },
+    {
+      "id": "utility-pole",
+      "label": "Utility pole",
+      "overlay_colour": "#38bdf8",
+      "scene": false
+    },
+    {
+      "id": "kilometre-marker",
+      "label": "Kilometre marker",
+      "overlay_colour": "#f472b6",
+      "scene": false
+    },
+    {
+      "id": "street-light",
+      "label": "Street light",
+      "overlay_colour": "#a3e635",
+      "scene": false
+    }
+  ],
+  "clues": [
+    {
+      "id": "fr-bollard-white-black-band",
+      "category": "bollard",
+      "title": "White bollard with a slanted black band",
+      "visual": {
+        "description": "A white roadside post with a black band slanting across it near the top and a small red reflector",
+        "features": [
+          "white post",
+          "slanted black band",
+          "red reflector"
+        ]
+      },
+      "signifies": "The usual roadside bollard in France. Spotting one is a strong hint that you are in France.",
+      "regions": [
+        {
+          "country": "FR",
+          "strength": "typical"
+        }
+      ],
+      "sources": [
+        {
+          "title": "Plonk It: France",
+          "url": "https://www.plonkit.net/france"
+        }
+      ],
+      "status": "draft"
+    },
+    {
+      "id": "in-milestone-green-top",
+      "category": "kilometre-marker",
+      "title": "Milestone with a green top",
+      "visual": {
+        "description": "A short white roadside stone with a rounded top section painted green",
+        "features": [
+          "white stone body",
+          "green rounded top"
+        ]
+      },
+      "signifies": "Marks distance along a State Highway. The colour of the top tells you the class of road.",
+      "regions": [
+        {
+          "country": "IN",
+          "strength": "typical"
+        }
+      ],
+      "lookalikes": [
+        "in-milestone-yellow-top"
+      ],
+      "tell_apart": "Check the colour of the top: green for State Highways, yellow for National Highways.",
+      "sources": [
+        {
+          "title": "Plonk It: India",
+          "url": "https://www.plonkit.net/india"
+        }
+      ],
+      "status": "draft"
+    },
+    {
+      "id": "in-milestone-yellow-top",
+      "category": "kilometre-marker",
+      "title": "Milestone with a yellow top",
+      "visual": {
+        "description": "A short white roadside stone with a rounded top section painted yellow",
+        "features": [
+          "white stone body",
+          "yellow rounded top"
+        ]
+      },
+      "signifies": "Marks distance along a National Highway. The colour of the top tells you the class of road.",
+      "regions": [
+        {
+          "country": "IN",
+          "strength": "typical"
+        }
+      ],
+      "lookalikes": [
+        "in-milestone-green-top"
+      ],
+      "tell_apart": "Check the colour of the top: yellow for National Highways, green for State Highways.",
+      "sources": [
+        {
+          "title": "Plonk It: India",
+          "url": "https://www.plonkit.net/india"
+        }
+      ],
+      "status": "draft"
+    }
+  ]
+}
