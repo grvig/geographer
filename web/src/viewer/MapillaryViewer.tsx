@@ -3,8 +3,11 @@ import {
   CancelMapillaryError,
   Viewer,
   type Image as MapillaryImage,
+  type TagComponent,
 } from "mapillary-js";
 import "mapillary-js/dist/mapillary.css";
+import type { Detection } from "../data/shardSchema";
+import { toTags } from "./detectionTags";
 
 export type ViewerImage = {
   id: string;
@@ -17,12 +20,20 @@ export type ViewerImage = {
 
 type Props = {
   imageId: string;
+  // Outlined in the current image, coloured by category id.
+  detections?: Detection[];
+  categoryColours?: Map<string, string>;
   onImageChange: (image: ViewerImage) => void;
   onBearingChange: (bearing: number) => void;
 };
 
+const NO_DETECTIONS: Detection[] = [];
+const NO_COLOURS = new Map<string, string>();
+
 export default function MapillaryViewer(props: Props) {
   const { imageId, onImageChange, onBearingChange } = props;
+  const detections = props.detections ?? NO_DETECTIONS;
+  const categoryColours = props.categoryColours ?? NO_COLOURS;
   const accessToken = import.meta.env.VITE_MAPILLARY_TOKEN;
   const containerRef = useRef<HTMLDivElement>(null);
   const viewerRef = useRef<Viewer | null>(null);
@@ -48,7 +59,11 @@ export default function MapillaryViewer(props: Props) {
     if (!container || !accessToken) {
       return;
     }
-    const viewer = new Viewer({ accessToken, container });
+    const viewer = new Viewer({
+      accessToken,
+      container,
+      component: { tag: true },
+    });
     viewer.on("image", (event) => handleImage(event.image));
     viewer.on("pov", async () => {
       const pov = await viewer.getPointOfView();
@@ -73,6 +88,16 @@ export default function MapillaryViewer(props: Props) {
       }
     });
   }, [imageId, accessToken]);
+
+  useEffect(() => {
+    const viewer = viewerRef.current;
+    if (!viewer) {
+      return;
+    }
+    const tags = viewer.getComponent<TagComponent>("tag");
+    tags.removeAll();
+    tags.add(toTags(detections, categoryColours));
+  }, [detections, categoryColours, accessToken]);
 
   if (!accessToken) {
     return (
