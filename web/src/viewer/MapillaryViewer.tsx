@@ -28,7 +28,7 @@ type Props = {
   // Called when the pointer moves onto or off an outline, with viewer pixels.
   onHover?: (hover: Hover | null) => void;
   // Called on click with the outline under the pointer, or null.
-  onSelect?: (detectionId: string | null) => void;
+  onSelect?: (hit: Hover | null) => void;
 };
 
 export type Hover = { detectionId: string; x: number; y: number };
@@ -75,8 +75,8 @@ export default function MapillaryViewer(props: Props) {
     }
     props.onHover?.(hover);
   });
-  const handleSelect = useEffectEvent((id: string | null) => {
-    props.onSelect?.(id);
+  const handleSelect = useEffectEvent((hit: Hover | null) => {
+    props.onSelect?.(hit);
   });
 
   useEffect(() => {
@@ -99,18 +99,20 @@ export default function MapillaryViewer(props: Props) {
       const ids = await tags.getTagIdsAt(pixelPoint);
       return ids[0] ?? null;
     };
-    viewer.on("mousemove", async (event) => {
-      const id = await tagIdAt(event.pixelPoint);
-      if (id) {
-        const [x = 0, y = 0] = event.pixelPoint;
-        handleHover({ detectionId: id, x, y });
-      } else {
-        handleHover(null);
+    const hitAt = async (pixelPoint: number[]): Promise<Hover | null> => {
+      const id = await tagIdAt(pixelPoint);
+      if (!id) {
+        return null;
       }
+      const [x = 0, y = 0] = pixelPoint;
+      return { detectionId: id, x, y };
+    };
+    viewer.on("mousemove", async (event) => {
+      handleHover(await hitAt(event.pixelPoint));
     });
     viewer.on("mouseout", () => handleHover(null));
     viewer.on("click", async (event) => {
-      handleSelect(await tagIdAt(event.pixelPoint));
+      handleSelect(await hitAt(event.pixelPoint));
     });
     viewerRef.current = viewer;
     return () => {

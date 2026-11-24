@@ -109,7 +109,7 @@ describe("MapillaryViewer", () => {
 
     fake.tags.getTagIdsAt.mockResolvedValue(["d2"]);
     await act(async () => fake.handlers.get("click")?.({ pixelPoint: [5, 5] }));
-    expect(onSelect).toHaveBeenCalledWith("d2");
+    expect(onSelect).toHaveBeenCalledWith({ detectionId: "d2", x: 5, y: 5 });
   });
 
   it("replaces the outlines when the detections change", () => {

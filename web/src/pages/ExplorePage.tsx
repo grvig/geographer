@@ -1,5 +1,6 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router";
+import FloatingCard, { type CardState } from "../components/FloatingCard";
 import GoogleMapsLink from "../components/GoogleMapsLink";
 import MapillaryCredit from "../components/MapillaryCredit";
 import Minimap from "../components/Minimap";
@@ -9,7 +10,11 @@ import {
   pickRandomImage,
 } from "../data/loadIndex";
 import type { Detection } from "../data/shardSchema";
-import MapillaryViewer, { type ViewerImage } from "../viewer/MapillaryViewer";
+import { placeCard } from "../lib/cardPlacement";
+import MapillaryViewer, {
+  type Hover,
+  type ViewerImage,
+} from "../viewer/MapillaryViewer";
 import { useAnalysis } from "../viewer/useAnalysis";
 
 const NO_DETECTIONS: Detection[] = [];
@@ -31,6 +36,43 @@ export default function ExplorePage() {
     }
     return colours;
   }, [analysis]);
+  const [card, setCard] = useState<CardState | null>(null);
+  const viewerBoxRef = useRef<HTMLDivElement>(null);
+
+  const cardAt = useCallback((hit: Hover, pinned: boolean): CardState => {
+    const box = viewerBoxRef.current;
+    const width = box?.clientWidth ?? 0;
+    const height = box?.clientHeight ?? 0;
+    const style = placeCard(hit.x, hit.y, width, height);
+    return { detectionId: hit.detectionId, style, pinned };
+  }, []);
+
+  const handleHover = useCallback(
+    (hit: Hover | null) => {
+      setCard((current) => {
+        if (current?.pinned) {
+          return current;
+        }
+        if (!hit) {
+          return null;
+        }
+        return cardAt(hit, false);
+      });
+    },
+    [cardAt],
+  );
+
+  // Clicking an outline pins its card; clicking anywhere else lets it go.
+  const handleSelect = useCallback(
+    (hit: Hover | null) => {
+      if (!hit) {
+        setCard(null);
+        return;
+      }
+      setCard(cardAt(hit, true));
+    },
+    [cardAt],
+  );
 
   // Without an image in the URL, start at a random processed image of the country.
   useEffect(() => {
@@ -78,6 +120,9 @@ export default function ExplorePage() {
       if (event.key === "n" && !typing && !modified) {
         jumpToRandomSpot();
       }
+      if (event.key === "Escape") {
+        setCard(null);
+      }
     }
     window.addEventListener("keydown", handleKey);
     return () => {
@@ -89,6 +134,7 @@ export default function ExplorePage() {
   const handleImageChange = useCallback(
     (next: ViewerImage) => {
       setImage(next);
+      setCard(null);
       setSearchParams({ image: next.id }, { replace: true });
     },
     [setSearchParams],
@@ -127,14 +173,24 @@ export default function ExplorePage() {
   }
   return (
     <div className="flex min-h-0 flex-1">
-      <div className="min-w-0 flex-1">
+      <div ref={viewerBoxRef} className="relative min-w-0 flex-1">
         <MapillaryViewer
           imageId={imageId}
           detections={detections}
           categoryColours={categoryColours}
           onImageChange={handleImageChange}
           onBearingChange={setBearing}
+          onHover={handleHover}
+          onSelect={handleSelect}
         />
+        {card && analysis?.image && analysis.library && (
+          <FloatingCard
+            card={card}
+            image={analysis.image}
+            library={analysis.library}
+            onClose={() => setCard(null)}
+          />
+        )}
       </div>
       {image && (
         <aside className="flex w-72 flex-col gap-3 border-l border-stone-800 p-3">
