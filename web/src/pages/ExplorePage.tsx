@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router";
 import FloatingCard, { type CardState } from "../components/FloatingCard";
 import GoogleMapsLink from "../components/GoogleMapsLink";
+import InViewList from "../components/InViewList";
 import MapillaryCredit from "../components/MapillaryCredit";
 import Minimap from "../components/Minimap";
 import {
@@ -73,6 +74,11 @@ export default function ExplorePage() {
     },
     [cardAt],
   );
+
+  // Picking from the list has no pointer position, so the card opens in a corner.
+  const handleListSelect = useCallback((detectionId: string) => {
+    setCard({ detectionId, style: { left: 16, top: 16 }, pinned: true });
+  }, []);
 
   // Without an image in the URL, start at a random processed image of the country.
   useEffect(() => {
@@ -197,6 +203,12 @@ export default function ExplorePage() {
           <div className="h-56 overflow-hidden rounded">
             <Minimap lat={image.lat} lon={image.lon} bearing={bearing} />
           </div>
+          <InViewList
+            analysis={analysis}
+            detections={detections}
+            selectedId={card?.detectionId ?? null}
+            onSelect={handleListSelect}
+          />
           <button
             type="button"
             onClick={jumpToRandomSpot}

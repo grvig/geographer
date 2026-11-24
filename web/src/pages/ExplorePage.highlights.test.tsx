@@ -111,21 +111,30 @@ describe("ExplorePage highlights", () => {
   it("shows a card on hover and hides it when the pointer leaves", async () => {
     await openImage();
     act(() => viewer.props?.onHover({ detectionId: "d1", x: 10, y: 10 }));
-    expect(screen.getByRole("heading")).toHaveTextContent("French bollard");
+    expect(screen.getByRole("article")).toHaveTextContent("French bollard");
     act(() => viewer.props?.onHover(null));
-    expect(screen.queryByRole("heading")).not.toBeInTheDocument();
+    expect(screen.queryByRole("article")).not.toBeInTheDocument();
   });
 
   it("keeps a clicked card until it is closed or Escape is pressed", async () => {
     await openImage();
     act(() => viewer.props?.onSelect({ detectionId: "d2", x: 10, y: 10 }));
     act(() => viewer.props?.onHover(null));
-    expect(screen.getByRole("heading")).toHaveTextContent("Unknown bollard");
+    expect(screen.getByRole("article")).toHaveTextContent("Unknown bollard");
     fireEvent.click(screen.getByRole("button", { name: "Close card" }));
-    expect(screen.queryByRole("heading")).not.toBeInTheDocument();
+    expect(screen.queryByRole("article")).not.toBeInTheDocument();
 
     act(() => viewer.props?.onSelect({ detectionId: "d1", x: 10, y: 10 }));
     fireEvent.keyDown(window, { key: "Escape" });
-    expect(screen.queryByRole("heading")).not.toBeInTheDocument();
+    expect(screen.queryByRole("article")).not.toBeInTheDocument();
+  });
+
+  it("pins a card when an object is picked from the In view list", async () => {
+    await openImage();
+    fireEvent.click(screen.getByRole("button", { name: /French bollard/ }));
+    expect(screen.getByRole("article")).toHaveTextContent("French bollard");
+    expect(
+      screen.getByRole("button", { name: "Close card" }),
+    ).toBeInTheDocument();
   });
 });
