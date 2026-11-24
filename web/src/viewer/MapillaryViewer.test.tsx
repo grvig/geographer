@@ -6,7 +6,7 @@ import MapillaryViewer from "./MapillaryViewer";
 const fake = vi.hoisted(() => ({
   handlers: new Map<string, (event: unknown) => void>(),
   moveTo: vi.fn(),
-  tags: { add: vi.fn(), removeAll: vi.fn() },
+  tags: { add: vi.fn(), removeAll: vi.fn(), getTagIdsAt: vi.fn() },
 }));
 
 vi.mock("mapillary-js", () => ({
@@ -74,6 +74,42 @@ describe("MapillaryViewer", () => {
       creator: "a",
     });
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+  });
+
+  it("reports hover changes and clicks on outlines", async () => {
+    vi.stubEnv("VITE_MAPILLARY_TOKEN", "token");
+    fake.moveTo.mockResolvedValue(undefined);
+    const onHover = vi.fn();
+    const onSelect = vi.fn();
+    render(
+      <MapillaryViewer
+        imageId="1"
+        onImageChange={vi.fn()}
+        onBearingChange={vi.fn()}
+        onHover={onHover}
+        onSelect={onSelect}
+      />,
+    );
+    const move = (x: number, y: number) =>
+      act(async () => fake.handlers.get("mousemove")?.({ pixelPoint: [x, y] }));
+
+    fake.tags.getTagIdsAt.mockResolvedValue(["d1"]);
+    await move(10, 20);
+    await move(11, 21);
+    expect(onHover).toHaveBeenCalledTimes(1);
+    expect(onHover).toHaveBeenLastCalledWith({
+      detectionId: "d1",
+      x: 10,
+      y: 20,
+    });
+
+    fake.tags.getTagIdsAt.mockResolvedValue([]);
+    await move(300, 300);
+    expect(onHover).toHaveBeenLastCalledWith(null);
+
+    fake.tags.getTagIdsAt.mockResolvedValue(["d2"]);
+    await act(async () => fake.handlers.get("click")?.({ pixelPoint: [5, 5] }));
+    expect(onSelect).toHaveBeenCalledWith("d2");
   });
 
   it("replaces the outlines when the detections change", () => {

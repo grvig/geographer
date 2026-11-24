@@ -25,7 +25,13 @@ type Props = {
   categoryColours?: Map<string, string>;
   onImageChange: (image: ViewerImage) => void;
   onBearingChange: (bearing: number) => void;
+  // Called when the pointer moves onto or off an outline, with viewer pixels.
+  onHover?: (hover: Hover | null) => void;
+  // Called on click with the outline under the pointer, or null.
+  onSelect?: (detectionId: string | null) => void;
 };
+
+export type Hover = { detectionId: string; x: number; y: number };
 
 const NO_DETECTIONS: Detection[] = [];
 const NO_COLOURS = new Map<string, string>();
@@ -53,6 +59,25 @@ export default function MapillaryViewer(props: Props) {
     });
   });
   const handleBearing = useEffectEvent(onBearingChange);
+  // Only report hover changes, so moving within one outline doesn't re-render.
+  const hoveredRef = useRef<string | null>(null);
+  const handleHover = useEffectEvent((hover: Hover | null) => {
+    const id = hover?.detectionId ?? null;
+    if (id === hoveredRef.current) {
+      return;
+    }
+    hoveredRef.current = id;
+    const container = containerRef.current;
+    if (container && id) {
+      container.style.cursor = "pointer";
+    } else if (container) {
+      container.style.cursor = "";
+    }
+    props.onHover?.(hover);
+  });
+  const handleSelect = useEffectEvent((id: string | null) => {
+    props.onSelect?.(id);
+  });
 
   useEffect(() => {
     const container = containerRef.current;
@@ -68,6 +93,24 @@ export default function MapillaryViewer(props: Props) {
     viewer.on("pov", async () => {
       const pov = await viewer.getPointOfView();
       handleBearing(pov.bearing);
+    });
+    const tagIdAt = async (pixelPoint: number[]) => {
+      const tags = viewer.getComponent<TagComponent>("tag");
+      const ids = await tags.getTagIdsAt(pixelPoint);
+      return ids[0] ?? null;
+    };
+    viewer.on("mousemove", async (event) => {
+      const id = await tagIdAt(event.pixelPoint);
+      if (id) {
+        const [x = 0, y = 0] = event.pixelPoint;
+        handleHover({ detectionId: id, x, y });
+      } else {
+        handleHover(null);
+      }
+    });
+    viewer.on("mouseout", () => handleHover(null));
+    viewer.on("click", async (event) => {
+      handleSelect(await tagIdAt(event.pixelPoint));
     });
     viewerRef.current = viewer;
     return () => {
