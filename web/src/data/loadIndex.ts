@@ -10,7 +10,7 @@ export class DataError extends Error {
   name = "DataError";
 }
 
-const dataRoot = `${import.meta.env.BASE_URL}data`;
+export const dataRoot = `${import.meta.env.BASE_URL}data`;
 
 export async function fetchJson<T>(
   url: string,
