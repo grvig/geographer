@@ -54,12 +54,14 @@ describe("MapillaryViewer", () => {
 
     const image = {
       id: "42",
+      sequenceId: "seq_9",
       lngLat: { lat: 1, lng: 2 },
       creatorUsername: "a",
     };
     act(() => fake.handlers.get("image")?.({ image }));
     expect(onImageChange).toHaveBeenCalledWith({
       id: "42",
+      sequenceId: "seq_9",
       lat: 1,
       lon: 2,
       creator: "a",

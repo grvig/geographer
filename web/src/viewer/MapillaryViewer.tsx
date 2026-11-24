@@ -8,6 +8,8 @@ import "mapillary-js/dist/mapillary.css";
 
 export type ViewerImage = {
   id: string;
+  // Analysis files are stored per sequence, so this picks the file to load.
+  sequenceId: string;
   lat: number;
   lon: number;
   creator: string;
@@ -33,6 +35,7 @@ export default function MapillaryViewer(props: Props) {
     setError(null);
     onImageChange({
       id: image.id,
+      sequenceId: image.sequenceId,
       lat: image.lngLat.lat,
       lon: image.lngLat.lng,
       creator: image.creatorUsername,
