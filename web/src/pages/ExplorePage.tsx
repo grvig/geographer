@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router";
 import GoogleMapsLink from "../components/GoogleMapsLink";
 import MapillaryCredit from "../components/MapillaryCredit";
@@ -8,7 +8,11 @@ import {
   loadCountryIndex,
   pickRandomImage,
 } from "../data/loadIndex";
+import type { Detection } from "../data/shardSchema";
 import MapillaryViewer, { type ViewerImage } from "../viewer/MapillaryViewer";
+import { useAnalysis } from "../viewer/useAnalysis";
+
+const NO_DETECTIONS: Detection[] = [];
 
 export default function ExplorePage() {
   const country = (useParams().country ?? "").toUpperCase();
@@ -18,6 +22,15 @@ export default function ExplorePage() {
   const [attempt, setAttempt] = useState(0);
   const [image, setImage] = useState<ViewerImage | null>(null);
   const [bearing, setBearing] = useState(0);
+  const analysis = useAnalysis(country, image);
+  const detections = analysis?.image?.detections ?? NO_DETECTIONS;
+  const categoryColours = useMemo(() => {
+    const colours = new Map<string, string>();
+    for (const category of analysis?.library?.categories.values() ?? []) {
+      colours.set(category.id, category.overlay_colour);
+    }
+    return colours;
+  }, [analysis]);
 
   // Without an image in the URL, start at a random processed image of the country.
   useEffect(() => {
@@ -117,6 +130,8 @@ export default function ExplorePage() {
       <div className="min-w-0 flex-1">
         <MapillaryViewer
           imageId={imageId}
+          detections={detections}
+          categoryColours={categoryColours}
           onImageChange={handleImageChange}
           onBearingChange={setBearing}
         />
