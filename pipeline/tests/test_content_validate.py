@@ -42,6 +42,9 @@ def test_category_schema_errors_name_the_field(content):
     assert any("'scene' is a required property" in error for error in errors)
 
 
+TYPICAL = {"strength": "typical"}
+
+
 @pytest.fixture
 def clues_dir(tmp_path):
     """Real schemas and categories, plus a helper that writes one clue file."""
@@ -94,6 +97,20 @@ def test_cross_file_rules_are_reported(clues_dir):
         "clues/poles/in-c.yaml: unknown category poles",
         "clues/bollard/in-a.yaml: a clue can't be its own look-alike",
         "clues/bollard/in-a.yaml: unknown look-alike zz-missing",
+    ]
+
+
+def test_admin1_must_match_the_geocoder_spelling(clues_dir):
+    root, write = clues_dir
+    write("in-a.yaml", regions=[{"country": "IN", "admin1": "Karnataka"} | TYPICAL])
+    write("fr-b.yaml", regions=[{"country": "FR", "admin1": "Bretagne"} | TYPICAL])
+    write("in-c.yaml", regions=[{"country": "IN", "admin1": "Karnatka"} | TYPICAL])
+    _, errors = load_clues(root)
+    assert errors == [
+        "clues/bollard/fr-b.yaml: FR has no region called 'Bretagne'"
+        " (did you mean 'Brittany'?)",
+        "clues/bollard/in-c.yaml: IN has no region called 'Karnatka'"
+        " (did you mean 'Karnataka'?)",
     ]
 
 

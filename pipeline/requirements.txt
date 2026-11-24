@@ -5,3 +5,4 @@ PyYAML>=6.0
 jsonschema>=4.23
 mapbox-vector-tile>=2.2
 requests>=2.32
+reverse_geocoder>=1.5

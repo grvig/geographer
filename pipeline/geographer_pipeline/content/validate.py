@@ -1,5 +1,8 @@
 """Checks the clue database before it is built into the site's clues.json."""
 
+import csv
+import difflib
+import functools
 import json
 from pathlib import Path
 
@@ -17,6 +20,34 @@ def schema_errors(content_dir: Path, name: str, data, label: str) -> list[str]:
         where = "/".join(str(part) for part in error.absolute_path)
         errors.append(f"{label}: {where or '(top level)'}: {error.message}")
     return sorted(errors)
+
+
+@functools.cache
+def admin1_names() -> dict[str, set[str]]:
+    """State and province names per country, as the location check spells them."""
+    import reverse_geocoder
+
+    path = Path(reverse_geocoder.__file__).with_name("rg_cities1000.csv")
+    names: dict[str, set[str]] = {}
+    with path.open(encoding="utf-8", newline="") as file:
+        for row in csv.DictReader(file):
+            names.setdefault(row["cc"], set()).add(row["admin1"])
+    return names
+
+
+def region_errors(clue: dict, label: str) -> list[str]:
+    errors = []
+    for region in clue["regions"]:
+        admin1 = region.get("admin1")
+        known = admin1_names().get(region["country"], set())
+        if admin1 is None or admin1 in known:
+            continue
+        message = f"{label}: {region['country']} has no region called '{admin1}'"
+        close = difflib.get_close_matches(admin1, known, n=1)
+        if close:
+            message += f" (did you mean '{close[0]}'?)"
+        errors.append(message)
+    return errors
 
 
 def load_categories(content_dir: Path = CONTENT_DIR) -> tuple[list[dict], list[str]]:
@@ -56,6 +87,7 @@ def load_clues(content_dir: Path = CONTENT_DIR) -> tuple[list[dict], list[str]]:
             errors.append(f"{label}: belongs in clues/{clue['category']}/")
         if clue["category"] not in category_ids:
             errors.append(f"{label}: unknown category {clue['category']}")
+        errors.extend(region_errors(clue, label))
         if clue_id in files_by_id:
             errors.append(f"{label}: id {clue_id} is used by {files_by_id[clue_id]}")
             continue
