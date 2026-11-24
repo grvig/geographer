@@ -30,6 +30,15 @@
   overlay_colour: "#38bdf8"
   scene: false
 
+- id: kilometre-marker
+  label: Kilometre marker
+  detector:
+    owl:
+      prompts: ["a roadside milestone", "a kilometre marker stone", "a small distance marker post"]
+      threshold: 0.2
+  overlay_colour: "#f472b6"
+  scene: false
+
 - id: street-light
   label: Street light
   detector:
