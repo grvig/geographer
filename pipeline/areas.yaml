@@ -43,3 +43,9 @@ countries:
       - { name: Lyon, bbox: [4.80, 45.72, 4.90, 45.79] }
       - { name: Toulouse, bbox: [1.40, 43.57, 1.48, 43.64] }
       - { name: Rennes, bbox: [-1.72, 48.08, -1.62, 48.14] }
+
+# Areas the detect and export commands analyse. Each image is downloaded at
+# 2048 px and run through the detectors, so areas stay small and capped.
+analysis:
+  # Country roads in Burgundy lined with white bollards.
+  - { name: saulieu, country: FR, bbox: [4.18, 47.25, 4.32, 47.35], limit: 200 }

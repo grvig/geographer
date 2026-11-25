@@ -16,6 +16,14 @@ class Area:
 
 
 @dataclass(frozen=True)
+class AnalysisArea:
+    name: str
+    country: str
+    bbox: list[float]
+    limit: int
+
+
+@dataclass(frozen=True)
 class Country:
     code: str
     name: str
@@ -47,3 +55,19 @@ def load_countries(path: Path = AREAS_FILE) -> list[Country]:
             areas.append(Area(area["name"], area["bbox"]))
         countries.append(Country(code, entry["name"], entry["bbox"], areas))
     return countries
+
+
+def load_analysis_areas(path: Path = AREAS_FILE) -> dict[str, AnalysisArea]:
+    countries = {country.code: country for country in load_countries(path)}
+    data = yaml.safe_load(path.read_text(encoding="utf-8"))
+    areas = {}
+    for entry in data.get("analysis", []):
+        name = entry["name"]
+        if not re.fullmatch(r"[a-z0-9-]+", name) or name in areas:
+            raise ValueError(f"{name}: analysis area names are unique kebab-case")
+        country = countries.get(entry["country"])
+        if country is None:
+            raise ValueError(f"{name}: unknown country {entry['country']}")
+        check_bbox(entry["bbox"], name, within=country.bbox)
+        areas[name] = AnalysisArea(name, country.code, entry["bbox"], entry["limit"])
+    return areas
