@@ -1,5 +1,10 @@
+from geographer_pipeline.cache import area_images, connect
 from geographer_pipeline.mapillary import images
-from geographer_pipeline.mapillary.images import fetch_images, parse_image
+from geographer_pipeline.mapillary.images import (
+    cache_images,
+    fetch_images,
+    parse_image,
+)
 
 
 def image_data(image_id, **extra):
@@ -47,3 +52,16 @@ def test_fetches_in_batches(monkeypatch):
     assert [image.id for image in fetched] == ["1", "2", "3"]
     assert [params["image_ids"] for _, params in client.calls] == ["1,2", "3"]
     assert client.calls[0][0] == "images"
+
+
+def test_caches_only_images_it_has_not_seen(tmp_path):
+    db = connect(tmp_path / "cache.sqlite")
+    client = FakeClient()
+    assert cache_images(client, db, ["1", "2"], "FR/test") == 2
+    assert cache_images(client, db, ["2", "3"], "FR/test") == 1
+    assert client.calls[1][1]["image_ids"] == "3"
+    rows = area_images(db, "FR/test")
+    assert [row["id"] for row in rows] == ["1", "2", "3"]
+    assert rows[0]["creator"] == "walker"
+    assert rows[0]["is_pano"] == 0
+    assert area_images(db, "IN/other") == []

@@ -59,3 +59,40 @@ def connect(path: Path = CACHE_FILE) -> sqlite3.Connection:
             f"{SCHEMA_VERSION}. Delete the file to rebuild it."
         )
     return db
+
+
+def missing_image_ids(db: sqlite3.Connection, ids: list[str]) -> list[str]:
+    known = {row["id"] for row in db.execute("SELECT id FROM images")}
+    return [image_id for image_id in ids if image_id not in known]
+
+
+def save_images(db: sqlite3.Connection, images: list, area: str) -> None:
+    rows = [
+        (
+            image.id,
+            area,
+            image.sequence,
+            image.lon,
+            image.lat,
+            image.is_pano,
+            image.captured_at,
+            image.creator,
+            image.width,
+            image.height,
+            image.thumb_url,
+        )
+        for image in images
+    ]
+    with db:
+        db.executemany(
+            "INSERT OR IGNORE INTO images (id, area, sequence, lon, lat, is_pano,"
+            " captured_at, creator, width, height, thumb_url)"
+            " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            rows,
+        )
+
+
+def area_images(db: sqlite3.Connection, area: str) -> list[sqlite3.Row]:
+    return db.execute(
+        "SELECT * FROM images WHERE area = ? ORDER BY sequence, captured_at", (area,)
+    ).fetchall()

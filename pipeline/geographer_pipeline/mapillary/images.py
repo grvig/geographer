@@ -2,6 +2,8 @@
 
 from dataclasses import dataclass
 
+from geographer_pipeline.cache import missing_image_ids, save_images
+
 FIELDS = [
     "id",
     "sequence",
@@ -60,3 +62,11 @@ def fetch_images(client, ids: list[str]) -> list[ImageMeta]:
         for data in response["data"]:
             images.append(parse_image(data))
     return images
+
+
+def cache_images(client, db, ids: list[str], area: str) -> int:
+    # Only ids the cache hasn't seen are fetched, so a rerun costs nothing.
+    missing = missing_image_ids(db, ids)
+    if missing:
+        save_images(db, fetch_images(client, missing), area)
+    return len(missing)
