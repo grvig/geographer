@@ -1,10 +1,15 @@
-"""Mapillary's own detections: decoding their outlines into 0-1 polygons."""
+"""Mapillary's own detections, decoded into 0-1 outlines and mapped to categories."""
 
 import base64
 
 import mapbox_vector_tile
 
-from geographer_pipeline.detect.geometry import Point, polygon_area
+from geographer_pipeline.detect.geometry import (
+    Detection,
+    Point,
+    polygon_area,
+    polygon_box,
+)
 
 
 def decode_outline(geometry: str) -> list[Point]:
@@ -32,3 +37,31 @@ def decode_outline(geometry: str) -> list[Point]:
     # An object split by something in front of it comes as several pieces;
     # the largest piece is the one worth outlining.
     return max(rings, key=polygon_area)
+
+
+def class_map(categories: list[dict]) -> dict[str, str]:
+    # Mapillary class value, e.g. "object--street-light", to our category id.
+    mapping = {}
+    for category in categories:
+        for value in category["detector"].get("mapillary", []):
+            mapping[value] = category["id"]
+    return mapping
+
+
+def fetch_mapillary_detections(
+    client, image_id: str, classes: dict[str, str]
+) -> list[Detection]:
+    response = client.graph(f"{image_id}/detections", ["value", "geometry"])
+    detections = []
+    for item in response["data"]:
+        # Most values (sky, road, cars, ...) aren't clues and are skipped here.
+        category = classes.get(item["value"])
+        if category is None:
+            continue
+        outline = decode_outline(item["geometry"])
+        if len(outline) < 3:
+            continue
+        # Mapillary gives no score; its detections count as certain.
+        box = polygon_box(outline)
+        detections.append(Detection(category, "mapillary", box, 1.0, outline))
+    return detections
