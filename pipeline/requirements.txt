@@ -1,8 +1,11 @@
-# Runtime dependencies. Machine-learning packages (torch, open_clip, transformers)
-# are added with the detection milestone, together with their install notes.
+# Runtime dependencies. torch is not listed: install the CUDA build first, as the
+# README describes, so pip doesn't pull in the CPU-only wheel.
 python-dotenv>=1.0
 PyYAML>=6.0
 jsonschema>=4.23
 mapbox-vector-tile>=2.2
 requests>=2.32
 reverse_geocoder>=1.5
+Pillow>=11.0
+# OWLv2 box scaling was checked on 5.24; recheck before moving to a new major.
+transformers>=5.24,<6
