@@ -1,0 +1,86 @@
+{
+  "schema_version": 1,
+  "sequence": "wH5gAlliK5RprgjpZBo_lQ",
+  "images": [
+    {
+      "id": "1958752607606553",
+      "lat": 47.252918,
+      "lon": 4.194326,
+      "country": "FR",
+      "admin1": "Bourgogne",
+      "is_pano": false,
+      "detections": [],
+      "scene": []
+    },
+    {
+      "id": "363903455064563",
+      "lat": 47.252918,
+      "lon": 4.194326,
+      "country": "FR",
+      "admin1": "Bourgogne",
+      "is_pano": false,
+      "detections": [],
+      "scene": []
+    },
+    {
+      "id": "3681837081944310",
+      "lat": 47.252918,
+      "lon": 4.194326,
+      "country": "FR",
+      "admin1": "Bourgogne",
+      "is_pano": false,
+      "detections": [],
+      "scene": []
+    },
+    {
+      "id": "523961138598749",
+      "lat": 47.252918,
+      "lon": 4.194326,
+      "country": "FR",
+      "admin1": "Bourgogne",
+      "is_pano": false,
+      "detections": [],
+      "scene": []
+    },
+    {
+      "id": "945713802846921",
+      "lat": 47.252918,
+      "lon": 4.194326,
+      "country": "FR",
+      "admin1": "Bourgogne",
+      "is_pano": false,
+      "detections": [],
+      "scene": []
+    },
+    {
+      "id": "862635137654046",
+      "lat": 47.252918,
+      "lon": 4.194326,
+      "country": "FR",
+      "admin1": "Bourgogne",
+      "is_pano": false,
+      "detections": [],
+      "scene": []
+    },
+    {
+      "id": "451915952550291",
+      "lat": 47.252918,
+      "lon": 4.194326,
+      "country": "FR",
+      "admin1": "Bourgogne",
+      "is_pano": false,
+      "detections": [],
+      "scene": []
+    },
+    {
+      "id": "1364303353940434",
+      "lat": 47.252918,
+      "lon": 4.194326,
+      "country": "FR",
+      "admin1": "Bourgogne",
+      "is_pano": false,
+      "detections": [],
+      "scene": []
+    }
+  ]
+}

@@ -24,6 +24,12 @@
       "label": "Street light",
       "overlay_colour": "#a3e635",
       "scene": false
+    },
+    {
+      "id": "sign-back",
+      "label": "Sign back",
+      "overlay_colour": "#c084fc",
+      "scene": false
     }
   ],
   "clues": [
