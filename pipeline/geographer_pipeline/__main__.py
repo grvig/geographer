@@ -25,6 +25,8 @@ def build_parser() -> argparse.ArgumentParser:
     detect.add_argument("--device", default="cuda", help="cuda or cpu")
     export = commands.add_parser("export", help="write shards for an analysis area")
     export.add_argument("area", help="an analysis area name from areas.yaml")
+    debug = commands.add_parser("debug", help="draw cached detections on images")
+    debug.add_argument("images", nargs="+", help="Mapillary image ids")
     return parser
 
 
@@ -92,6 +94,34 @@ def run_export(args: argparse.Namespace) -> int:
     return 0
 
 
+def run_debug(args: argparse.Namespace) -> int:
+    from PIL import Image
+
+    from geographer_pipeline.cache import connect, image_detections
+    from geographer_pipeline.content.validate import load_categories
+    from geographer_pipeline.detect.debug import DEBUG_DIR, draw_detections
+    from geographer_pipeline.mapillary.download import raw_path
+
+    categories, _ = load_categories()
+    colours = {category["id"]: category["overlay_colour"] for category in categories}
+    DEBUG_DIR.mkdir(parents=True, exist_ok=True)
+    missing = 0
+    with connect() as db:
+        for image_id in args.images:
+            if not raw_path(image_id).exists():
+                print(f"{image_id}: not downloaded; run detect first")
+                missing += 1
+                continue
+            image = Image.open(raw_path(image_id)).convert("RGB")
+            drawn = draw_detections(image, image_detections(db, image_id), colours)
+            path = DEBUG_DIR / f"{image_id}.png"
+            drawn.save(path)
+            print(path)
+    if missing:
+        return 1
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
@@ -104,6 +134,8 @@ def main(argv: list[str] | None = None) -> int:
         return run_detect(args)
     if args.command == "export":
         return run_export(args)
+    if args.command == "debug":
+        return run_debug(args)
     return 0
 
 
