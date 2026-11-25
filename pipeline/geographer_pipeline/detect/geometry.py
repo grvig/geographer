@@ -50,5 +50,16 @@ def iou(a: Box, b: Box) -> float:
     return shared / union
 
 
-def short_side_px(box: Box, width: int, height: int) -> float:
-    return min((box[2] - box[0]) * width, (box[3] - box[1]) * height)
+def non_max_suppression(detections: list[Detection], limit: float) -> list[Detection]:
+    # Keep the best-scoring box of each cluster of same-category boxes that
+    # overlap by more than the limit; they are one object found several times.
+    kept = []
+    for detection in sorted(detections, key=lambda d: d.score, reverse=True):
+        duplicate = any(
+            other.category == detection.category
+            and iou(other.box, detection.box) > limit
+            for other in kept
+        )
+        if not duplicate:
+            kept.append(detection)
+    return kept

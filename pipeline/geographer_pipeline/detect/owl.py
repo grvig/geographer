@@ -1,8 +1,14 @@
 """OWLv2 open-vocabulary detection, for objects Mapillary doesn't detect."""
 
-from geographer_pipeline.detect.geometry import Detection
+from geographer_pipeline.detect.geometry import (
+    Detection,
+    non_max_suppression,
+)
 
 MODEL_NAME = "google/owlv2-base-patch16-ensemble"
+# Smaller boxes are too few pixels to crop and match reliably.
+MIN_SIDE_PX = 24
+NMS_IOU = 0.5
 
 
 class OwlDetector:
@@ -66,6 +72,8 @@ class OwlDetector:
             category, threshold = self.prompts[label]
             if score < threshold:
                 continue
+            if min(x1 - x0, y1 - y0) < MIN_SIDE_PX:
+                continue
             box = (
                 max(0.0, x0 / width),
                 max(0.0, y0 / height),
@@ -73,4 +81,4 @@ class OwlDetector:
                 min(1.0, y1 / height),
             )
             detections.append(Detection(category, "owl", box, round(score, 3)))
-        return detections
+        return non_max_suppression(detections, NMS_IOU)

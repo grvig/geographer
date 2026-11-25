@@ -3,9 +3,9 @@ import pytest
 from geographer_pipeline.detect.geometry import (
     Detection,
     iou,
+    non_max_suppression,
     polygon_area,
     polygon_box,
-    short_side_px,
 )
 
 SQUARE = [(0.1, 0.1), (0.3, 0.1), (0.3, 0.3), (0.1, 0.3)]
@@ -25,14 +25,26 @@ def test_iou():
     assert iou((0.1, 0.1, 0.1, 0.1), (0.1, 0.1, 0.1, 0.1)) == 0.0
 
 
-def test_short_side_uses_image_pixels():
-    # 10% of 2048 wide is 204.8 px; 2% of 1536 high is 30.72 px.
-    assert short_side_px((0.0, 0.0, 0.1, 0.02), 2048, 1536) == pytest.approx(30.72)
-
-
 def test_shape_prefers_polygon_and_rounds():
     rect = Detection("bollard", "owl", (0.123456, 0.2, 0.3, 0.4), 0.5)
     assert rect.shape() == {"type": "rect", "coords": [0.1235, 0.2, 0.3, 0.4]}
     outlined = Detection("utility-pole", "mapillary", (0.1, 0.1, 0.3, 0.3), 1.0, SQUARE)
     assert outlined.shape()["type"] == "polygon"
     assert outlined.shape()["coords"][0] == [0.1, 0.1]
+
+
+def test_suppression_only_merges_boxes_of_the_same_category():
+    box = (0.1, 0.1, 0.2, 0.3)
+    shifted = (0.11, 0.1, 0.21, 0.3)
+    detections = [
+        Detection("bollard", "owl", box, 0.4),
+        Detection("bollard", "owl", shifted, 0.7),
+        Detection("kilometre-marker", "owl", box, 0.5),
+        Detection("bollard", "owl", (0.5, 0.5, 0.6, 0.6), 0.3),
+    ]
+    kept = non_max_suppression(detections, 0.5)
+    assert [(d.category, d.score) for d in kept] == [
+        ("bollard", 0.7),
+        ("kilometre-marker", 0.5),
+        ("bollard", 0.3),
+    ]
