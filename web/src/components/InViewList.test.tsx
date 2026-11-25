@@ -85,8 +85,11 @@ describe("InViewList", () => {
     expect(
       screen.getByRole("button", { name: /French bollard/ }),
     ).toHaveAttribute("aria-pressed", "true");
-    fireEvent.click(screen.getByRole("button", { name: /Unknown bollard/ }));
+    const unknown = screen.getByRole("button", { name: /Unknown bollard/ });
+    fireEvent.click(unknown);
     expect(onSelect).toHaveBeenCalledWith("d2");
+    // An unmatched object has no clue confidence to show.
+    expect(unknown).not.toHaveTextContent("%");
   });
 
   it.each([

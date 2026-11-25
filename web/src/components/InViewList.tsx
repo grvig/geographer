@@ -54,9 +54,12 @@ function Body({ analysis, detections, selectedId, onSelect }: Props) {
                 style={{ background: category?.overlay_colour }}
               />
               <span className="flex-1">{name}</span>
-              <span className="text-stone-400">
-                {Math.round(detection.confidence * 100)}%
-              </span>
+              {/* Only a clue match has a confidence worth showing. */}
+              {clue && (
+                <span className="text-stone-400">
+                  {Math.round(detection.confidence * 100)}%
+                </span>
+              )}
             </button>
           </li>
         );
