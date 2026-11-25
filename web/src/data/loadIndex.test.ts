@@ -8,6 +8,7 @@ const india: CountryIndex = {
   name: "India",
   bbox: [68.1, 6.7, 97.4, 35.5],
   images: ["101", "202", "303"],
+  analysed: [],
 };
 
 function stubFetch(status: number, body: unknown) {
@@ -41,5 +42,11 @@ describe("pickRandomImage", () => {
   it("maps the random number onto the image list", () => {
     expect(pickRandomImage(india, () => 0)).toBe("101");
     expect(pickRandomImage(india, () => 0.99)).toBe("303");
+  });
+
+  it("prefers analysed images when there are any", () => {
+    const analysed = { ...india, analysed: ["404", "505"] };
+    expect(pickRandomImage(analysed, () => 0)).toBe("404");
+    expect(pickRandomImage(analysed, () => 0.99)).toBe("505");
   });
 });

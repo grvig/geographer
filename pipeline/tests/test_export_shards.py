@@ -3,7 +3,7 @@ import json
 from test_mapillary_images import FakeClient
 
 from geographer_pipeline.areas import AnalysisArea
-from geographer_pipeline.cache import connect, save_detections
+from geographer_pipeline.cache import connect, images_with_detections, save_detections
 from geographer_pipeline.detect.geometry import Detection
 from geographer_pipeline.export.shards import export_area
 from geographer_pipeline.geocode import geocode_images
@@ -48,6 +48,7 @@ def test_writes_one_shard_per_sequence_with_unknown_objects(tmp_path):
         "verified": False,
     }
     assert shard["images"][1]["detections"] == []
+    assert images_with_detections(db, AREA.name) == ["1"]
 
 
 def test_keeps_hand_checked_images(tmp_path):

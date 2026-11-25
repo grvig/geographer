@@ -4,7 +4,12 @@ import random
 import mapbox_vector_tile
 
 from geographer_pipeline.areas import Area, Country
-from geographer_pipeline.export.index import build_indexes, sample_image_ids
+from geographer_pipeline.export.index import (
+    add_analysed,
+    build_indexes,
+    sample_image_ids,
+    write_index,
+)
 from geographer_pipeline.mapillary.tiles import tile_to_lonlat, tile_xy
 
 # An area just inside one tile, so no neighbouring tile is sampled.
@@ -68,3 +73,14 @@ def test_country_without_images_is_reported_not_written(tmp_path):
     empty = Area("Nowhere", [0, 0, 0.01, 0.01])
     assert build_indexes(FakeClient(), [country("XX", [empty])], tmp_path, 1, 5, 0) == 1
     assert not (tmp_path / "XX.json").exists()
+
+
+def test_analysed_images_survive_resampling(tmp_path):
+    france = country("FR", [Area("A", TILE_BBOX)])
+    write_index(france, ["1", "2"], tmp_path)
+    assert add_analysed("FR", ["30", "4"], tmp_path) == 2
+    assert add_analysed("FR", ["4", "5"], tmp_path) == 3
+    write_index(france, ["7"], tmp_path)
+    index = json.loads((tmp_path / "FR.json").read_text(encoding="utf-8"))
+    assert index["images"] == ["7"]
+    assert index["analysed"] == ["4", "5", "30"]

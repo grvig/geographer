@@ -52,6 +52,11 @@ export async function loadCountryIndex(code: string): Promise<CountryIndex> {
 }
 
 export function pickRandomImage(index: CountryIndex, random = Math.random) {
-  const position = Math.floor(random() * index.images.length);
-  return index.images[position] ?? index.images[0]!;
+  // Start where there is something to see, once the country has analysed images.
+  let pool = index.images;
+  if (index.analysed.length > 0) {
+    pool = index.analysed;
+  }
+  const position = Math.floor(random() * pool.length);
+  return pool[position] ?? pool[0]!;
 }

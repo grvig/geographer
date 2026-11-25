@@ -24,6 +24,8 @@ export const countryIndexSchema = z.object({
   // [west, south, east, north] in degrees
   bbox: z.tuple([z.number(), z.number(), z.number(), z.number()]),
   images: z.array(imageId).min(1),
+  // Images the pipeline has analysed and found objects in.
+  analysed: z.array(imageId).default([]),
 });
 
 export type CountryList = z.infer<typeof countryListSchema>;

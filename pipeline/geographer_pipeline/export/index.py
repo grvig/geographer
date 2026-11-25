@@ -43,14 +43,20 @@ def write_json(path: Path, data: dict) -> None:
 
 def write_index(country: Country, ids: list[str], out_dir: Path) -> None:
     out_dir.mkdir(parents=True, exist_ok=True)
+    path = out_dir / f"{country.code}.json"
+    # Resampling start points must not forget which images were analysed.
+    analysed = []
+    if path.exists():
+        analysed = json.loads(path.read_text(encoding="utf-8")).get("analysed", [])
     index = {
         "schema_version": SCHEMA_VERSION,
         "country": country.code,
         "name": country.name,
         "bbox": country.bbox,
         "images": ids,
+        "analysed": analysed,
     }
-    write_json(out_dir / f"{country.code}.json", index)
+    write_json(path, index)
     # Replace this country's entry in place and keep the others.
     list_path = out_dir / "countries.json"
     entries = {}
@@ -78,3 +84,12 @@ def build_indexes(client, countries, out_dir, tiles_per_area, limit, seed) -> in
         write_index(country, ids, out_dir)
         print(f"{country.code}: {len(ids)} start points")
     return failed
+
+
+def add_analysed(code: str, ids: list[str], out_dir: Path = INDEX_DIR) -> int:
+    path = out_dir / f"{code}.json"
+    index = json.loads(path.read_text(encoding="utf-8"))
+    analysed = sorted(set(index.get("analysed", [])) | set(ids), key=int)
+    index["analysed"] = analysed
+    write_json(path, index)
+    return len(analysed)

@@ -116,3 +116,12 @@ def image_detections(db: sqlite3.Connection, image_id: str) -> list[sqlite3.Row]
     return db.execute(
         "SELECT * FROM detections WHERE image_id = ? ORDER BY rowid", (image_id,)
     ).fetchall()
+
+
+def images_with_detections(db: sqlite3.Connection, area: str) -> list[str]:
+    rows = db.execute(
+        "SELECT DISTINCT image_id FROM detections"
+        " JOIN images ON images.id = detections.image_id WHERE images.area = ?",
+        (area,),
+    )
+    return [row["image_id"] for row in rows]

@@ -23,6 +23,8 @@ def build_parser() -> argparse.ArgumentParser:
     detect = commands.add_parser("detect", help="find objects in an analysis area")
     detect.add_argument("area", help="an analysis area name from areas.yaml")
     detect.add_argument("--device", default="cuda", help="cuda or cpu")
+    export = commands.add_parser("export", help="write shards for an analysis area")
+    export.add_argument("area", help="an analysis area name from areas.yaml")
     return parser
 
 
@@ -71,6 +73,25 @@ def run_detect(args: argparse.Namespace) -> int:
     return 0
 
 
+def run_export(args: argparse.Namespace) -> int:
+    from geographer_pipeline.areas import load_analysis_areas
+    from geographer_pipeline.cache import connect, images_with_detections
+    from geographer_pipeline.export.index import add_analysed
+    from geographer_pipeline.export.shards import export_area
+
+    area = load_analysis_areas().get(args.area)
+    if area is None:
+        print(f"Unknown area {args.area}; see the analysis list in pipeline/areas.yaml")
+        return 2
+    with connect() as db:
+        paths = export_area(db, area)
+        found = images_with_detections(db, area.name)
+    # Images with something found in them become start points on the site.
+    total = add_analysed(area.country, found)
+    print(f"{area.name}: {len(paths)} shards, {total} analysed start points")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
@@ -81,6 +102,8 @@ def main(argv: list[str] | None = None) -> int:
         return run_index(args)
     if args.command == "detect":
         return run_detect(args)
+    if args.command == "export":
+        return run_export(args)
     return 0
 
 
