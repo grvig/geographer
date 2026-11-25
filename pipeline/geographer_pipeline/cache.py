@@ -109,3 +109,10 @@ def save_detections(db: sqlite3.Connection, image_id: str, detections: list) -> 
         db.execute("DELETE FROM detections WHERE image_id = ?", (image_id,))
         db.executemany("INSERT INTO detections VALUES (?, ?, ?, ?, ?, ?)", rows)
         db.execute("UPDATE images SET detected = 1 WHERE id = ?", (image_id,))
+
+
+def image_detections(db: sqlite3.Connection, image_id: str) -> list[sqlite3.Row]:
+    # Insertion order keeps d2 before d10.
+    return db.execute(
+        "SELECT * FROM detections WHERE image_id = ? ORDER BY rowid", (image_id,)
+    ).fetchall()
