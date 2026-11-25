@@ -5,6 +5,7 @@ where it stopped.
 """
 
 import random
+import shutil
 from collections import defaultdict
 from pathlib import Path
 
@@ -57,6 +58,7 @@ def detect_area(
     classes: dict[str, str],
     raw_dir: Path = RAW_DIR,
     crops_dir: Path = CROPS_DIR,
+    redo: bool = False,
 ) -> int:
     points = []
     for x, y in tiles_for_bbox(area.bbox):
@@ -66,12 +68,14 @@ def detect_area(
     cache_images(client, db, ids, area.name)
     download_images(client, ids, raw_dir)
     geocode_images(db, area.name)
-    pending = [row for row in area_images(db, area.name) if not row["detected"]]
+    # redo reruns the detectors on everything, e.g. after changing prompts.
+    pending = [row for row in area_images(db, area.name) if redo or not row["detected"]]
     for number, row in enumerate(pending, 1):
         image = Image.open(raw_path(row["id"], raw_dir)).convert("RGB")
         mapillary = fetch_mapillary_detections(client, row["id"], classes)
         found = merge_detections(mapillary, owl.detect(image))
         named = [(f"d{index}", detection) for index, detection in enumerate(found, 1)]
+        shutil.rmtree(crops_dir / row["id"], ignore_errors=True)
         for detection_id, detection in named:
             save_crop(
                 image, detection.box, crop_path(row["id"], detection_id, crops_dir)

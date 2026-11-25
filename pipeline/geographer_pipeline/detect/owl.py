@@ -9,6 +9,11 @@ MODEL_NAME = "google/owlv2-base-patch16-ensemble"
 # Smaller boxes are too few pixels to crop and match reliably.
 MIN_SIDE_PX = 24
 NMS_IOU = 0.5
+# Things that look like our posts but aren't clues. OWLv2 labels each box with
+# its best-matching prompt, so these soak up sign posts that would otherwise be
+# called bollards; boxes they win are dropped. Checked on Burgundy roads, where
+# without them every "bollard" was a sign post.
+DECOY_PROMPTS = ["a traffic sign on a pole", "a street name sign"]
 
 
 class OwlDetector:
@@ -20,6 +25,8 @@ class OwlDetector:
             if owl:
                 for prompt in owl["prompts"]:
                     self.prompts[prompt] = (category["id"], owl["threshold"])
+        for prompt in DECOY_PROMPTS:
+            self.prompts[prompt] = (None, 0.0)
         self.device = device
         self.model = None
         self.processor = None
@@ -39,7 +46,7 @@ class OwlDetector:
     def detect(self, image) -> list[Detection]:
         import torch
 
-        if not self.prompts:
+        if not any(category for category, _ in self.prompts.values()):
             return []
         if self.model is None:
             self.load()
@@ -51,7 +58,9 @@ class OwlDetector:
             outputs = self.model(**inputs)
         # Boxes come back in the original image's pixels (checked on transformers
         # 5.24: the processor undoes its own square padding).
-        lowest = min(threshold for _, threshold in self.prompts.values())
+        lowest = min(
+            threshold for category, threshold in self.prompts.values() if category
+        )
         result = self.processor.post_process_grounded_object_detection(
             outputs=outputs,
             target_sizes=[(image.height, image.width)],
@@ -81,4 +90,7 @@ class OwlDetector:
                 min(1.0, y1 / height),
             )
             detections.append(Detection(category, "owl", box, round(score, 3)))
-        return non_max_suppression(detections, NMS_IOU)
+        # Decoys take part in suppression, so a sign post found as a decoy also
+        # removes the weaker bollard box on top of it, and are then dropped.
+        kept = non_max_suppression(detections, NMS_IOU)
+        return [detection for detection in kept if detection.category]

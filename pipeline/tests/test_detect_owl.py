@@ -1,6 +1,6 @@
 import pytest
 
-from geographer_pipeline.detect.owl import OwlDetector
+from geographer_pipeline.detect.owl import DECOY_PROMPTS, OwlDetector
 
 CATEGORIES = [
     {
@@ -17,11 +17,10 @@ CATEGORIES = [
 
 def test_prompts_point_to_their_category_and_threshold():
     detector = OwlDetector(CATEGORIES, device="cpu")
-    assert detector.prompts == {
-        "a bollard": ("bollard", 0.3),
-        "a post": ("bollard", 0.3),
-        "a milestone": ("kilometre-marker", 0.5),
-    }
+    assert detector.prompts["a post"] == ("bollard", 0.3)
+    assert detector.prompts["a milestone"] == ("kilometre-marker", 0.5)
+    assert detector.prompts[DECOY_PROMPTS[0]] == (None, 0.0)
+    assert len(detector.prompts) == 3 + len(DECOY_PROMPTS)
 
 
 def test_applies_each_categorys_threshold_and_normalises_boxes():
@@ -53,3 +52,16 @@ def test_drops_small_boxes_and_duplicates():
     # The 20 px wide box is too small; the two overlapping bollards are one object.
     assert len(detections) == 1
     assert detections[0].score == 0.6
+
+
+def test_decoys_suppress_overlapping_boxes_and_are_dropped():
+    detector = OwlDetector(CATEGORIES, device="cpu")
+    sign_post = [100, 100, 140, 300]
+    detections = detector.to_detections(
+        [sign_post, [102, 100, 142, 300], [500, 100, 540, 300]],
+        [0.5, 0.35, 0.45],
+        [DECOY_PROMPTS[0], "a bollard", "a bollard"],
+        2000,
+        1000,
+    )
+    assert [d.box[0] for d in detections] == [0.25]

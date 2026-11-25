@@ -77,3 +77,9 @@ def test_detects_crops_and_resumes(tmp_path):
     # A second run finds nothing left to do.
     assert detect_area(*run, tmp_path / "raw", tmp_path / "crops") == 0
     assert owl.calls == 1
+    # Redoing reruns the detectors and replaces the old crops.
+    stale = tmp_path / "crops" / "11" / "d9.jpg"
+    stale.write_bytes(b"old")
+    assert detect_area(*run, tmp_path / "raw", tmp_path / "crops", redo=True) == 1
+    assert owl.calls == 2
+    assert not stale.exists()

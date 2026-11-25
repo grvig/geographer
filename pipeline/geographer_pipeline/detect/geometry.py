@@ -51,15 +51,12 @@ def iou(a: Box, b: Box) -> float:
 
 
 def non_max_suppression(detections: list[Detection], limit: float) -> list[Detection]:
-    # Keep the best-scoring box of each cluster of same-category boxes that
-    # overlap by more than the limit; they are one object found several times.
+    # Keep the best-scoring box of each cluster of boxes that overlap by more
+    # than the limit: they are one object, found several times or under several
+    # categories, and one object gets one category.
     kept = []
     for detection in sorted(detections, key=lambda d: d.score, reverse=True):
-        duplicate = any(
-            other.category == detection.category
-            and iou(other.box, detection.box) > limit
-            for other in kept
-        )
+        duplicate = any(iou(other.box, detection.box) > limit for other in kept)
         if not duplicate:
             kept.append(detection)
     return kept

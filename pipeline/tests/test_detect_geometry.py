@@ -33,7 +33,7 @@ def test_shape_prefers_polygon_and_rounds():
     assert outlined.shape()["coords"][0] == [0.1, 0.1]
 
 
-def test_suppression_only_merges_boxes_of_the_same_category():
+def test_suppression_keeps_one_box_per_object_whatever_its_category():
     box = (0.1, 0.1, 0.2, 0.3)
     shifted = (0.11, 0.1, 0.21, 0.3)
     detections = [
@@ -43,8 +43,4 @@ def test_suppression_only_merges_boxes_of_the_same_category():
         Detection("bollard", "owl", (0.5, 0.5, 0.6, 0.6), 0.3),
     ]
     kept = non_max_suppression(detections, 0.5)
-    assert [(d.category, d.score) for d in kept] == [
-        ("bollard", 0.7),
-        ("kilometre-marker", 0.5),
-        ("bollard", 0.3),
-    ]
+    assert [(d.category, d.score) for d in kept] == [("bollard", 0.7), ("bollard", 0.3)]

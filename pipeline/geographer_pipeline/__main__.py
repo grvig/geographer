@@ -23,6 +23,9 @@ def build_parser() -> argparse.ArgumentParser:
     detect = commands.add_parser("detect", help="find objects in an analysis area")
     detect.add_argument("area", help="an analysis area name from areas.yaml")
     detect.add_argument("--device", default="cuda", help="cuda or cpu")
+    detect.add_argument(
+        "--redo", action="store_true", help="detect again in images already done"
+    )
     export = commands.add_parser("export", help="write shards for an analysis area")
     export.add_argument("area", help="an analysis area name from areas.yaml")
     debug = commands.add_parser("debug", help="draw cached detections on images")
@@ -71,7 +74,7 @@ def run_detect(args: argparse.Namespace) -> int:
     client = MapillaryClient(load_token())
     owl = OwlDetector(categories, args.device)
     with connect() as db:
-        detect_area(client, db, area, owl, class_map(categories))
+        detect_area(client, db, area, owl, class_map(categories), redo=args.redo)
     return 0
 
 
