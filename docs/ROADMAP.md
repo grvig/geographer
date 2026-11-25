@@ -44,14 +44,15 @@ Built in vertical slices so something visible works early. Each milestone lists 
 
 ## M3: Real detections
 
-- [ ] Mapillary client with retries, backoff and rate limiting
-- [ ] SQLite cache for images, detections, crops and embeddings
-- [ ] Area fetch through coverage tiles, image download
-- [ ] Detection decoding (vector tile to normalised polygons), with a visual check
-- [ ] OWLv2 detector with per-category thresholds, NMS and minimum size
-- [ ] Merging Mapillary and OWLv2 detections
-- [ ] Crops from `thumb_2048_url` with 15% padding
-- [ ] Shard export for one area, with a schema version
+- [x] Mapillary client with retries, backoff and rate limiting
+- [x] SQLite cache for images and detections (embeddings join it in M4)
+- [x] Area fetch through coverage tiles, image download
+- [x] Detection decoding (vector tile to normalised polygons), with a visual check
+- [x] OWLv2 detector with per-category thresholds, NMS and minimum size
+- [x] Merging Mapillary and OWLv2 detections
+- [x] Crops from `thumb_2048_url` with 15% padding
+- [x] Shard export for one area, with a schema version
+- [x] Analysed images used as start points on the site
 
 ## M4: Real matching
 

@@ -49,9 +49,14 @@ npm run dev
 Needs Python 3.11 or newer. Keep the virtual environment outside any synced folder, since the
 machine-learning packages are several gigabytes.
 
+Install PyTorch first, picking the CUDA build for your driver from
+<https://pytorch.org/get-started/locally/>. Installing it through `requirements.txt` would pull in
+the CPU-only build. Detection runs on a 4 GB laptop GPU, and on the CPU too (slowly).
+
 ```sh
 python -m venv ~/.venvs/geographer
 source ~/.venvs/geographer/bin/activate   # Windows: ~/.venvs/geographer/Scripts/activate
+pip install torch --index-url https://download.pytorch.org/whl/cu128
 pip install -r pipeline/requirements.txt -r pipeline/requirements-dev.txt
 echo "MAPILLARY_TOKEN=MLY|..." > pipeline/.env
 ```
@@ -61,8 +66,16 @@ Run commands from `pipeline/`:
 ```sh
 python -m geographer_pipeline index         # start points for every country in areas.yaml
 python -m geographer_pipeline index IN FR   # or just some of them
+python -m geographer_pipeline detect saulieu   # find objects in an analysis area
+python -m geographer_pipeline export saulieu   # write its shards for the site
+python -m geographer_pipeline debug 123 456    # draw detections into data/debug/
 pytest && ruff check . && ruff format --check .
 ```
+
+Analysis areas are listed under `analysis:` in `pipeline/areas.yaml`. `detect` keeps everything it
+downloads and finds in `data/` (ignored by git), so a second run only does what's missing; add
+`--redo` to run the detectors again after changing prompts or thresholds. The first
+run also downloads the OWLv2 model weights from Hugging Face.
 
 ### Deploying
 

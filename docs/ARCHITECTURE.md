@@ -3,12 +3,12 @@
 Geographer has four parts. Heavy work happens offline on a developer machine; the deployed site is
 static and only reads precomputed JSON.
 
-| Part        | Language          | Runs                  | Job                                               |
-| ----------- | ----------------- | --------------------- | ------------------------------------------------- |
-| `pipeline/` | Python            | locally, with a GPU   | fetch imagery, detect objects, match clues, export |
-| `web/`      | TypeScript, React | in the browser        | viewer, outlines, hover cards, clue library       |
-| `content/`  | YAML, JPEG        | n/a                   | the clue database and reference crops             |
-| curation    | Python + React    | locally only          | review matches, confirm labels, add references    |
+| Part        | Language          | Runs                | Job                                                |
+| ----------- | ----------------- | ------------------- | -------------------------------------------------- |
+| `pipeline/` | Python            | locally, with a GPU | fetch imagery, detect objects, match clues, export |
+| `web/`      | TypeScript, React | in the browser      | viewer, outlines, hover cards, clue library        |
+| `content/`  | YAML, JPEG        | n/a                 | the clue database and reference crops              |
+| curation    | Python + React    | locally only        | review matches, confirm labels, add references     |
 
 ## Data flow
 
@@ -43,6 +43,19 @@ is shown as unknown in its category.
 **Two detectors.** Mapillary's own detections cover classes such as utility poles and street lights.
 OWLv2, an open-vocabulary detector, covers objects Mapillary has no class for, such as bollards.
 Overlapping boxes (IoU above 0.5) are merged, keeping the Mapillary polygon.
+
+**Decoy prompts.** OWLv2 labels each box with the prompt it matches best. Generic prompts such as
+"a roadside bollard" mostly found sign posts, so the detector also asks for "a traffic sign on a
+pole" and "a street name sign" and drops the boxes those win. Prompts and thresholds in
+`content/categories.yaml` are checked against real imagery with `detect --redo` and `debug`.
+
+**Runs of images, not a scatter.** An analysis area takes runs of up to 40 consecutive images
+from a few sequences, so walking along a road in the viewer keeps finding analysed images. Analysed
+images with something found in them become the site's start points. Panoramas are skipped for now:
+crops from them are distorted.
+
+**Hand-checked data wins.** Exporting an area rewrites its shards, except for images that have a
+detection labelled or verified by hand; those entries are kept as they are.
 
 **Coverage through vector tiles.** The Graph API's bounding-box image search only accepts areas
 smaller than 0.01°, so the pipeline lists images in an area through Mapillary's coverage tiles at
