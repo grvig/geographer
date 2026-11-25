@@ -20,6 +20,9 @@ def build_parser() -> argparse.ArgumentParser:
     index.add_argument("--tiles-per-area", type=int, default=5)
     index.add_argument("--limit", type=int, default=500, help="start points each")
     index.add_argument("--seed", type=int, default=0)
+    detect = commands.add_parser("detect", help="find objects in an analysis area")
+    detect.add_argument("area", help="an analysis area name from areas.yaml")
+    detect.add_argument("--device", default="cuda", help="cuda or cpu")
     return parser
 
 
@@ -44,6 +47,30 @@ def run_index(args: argparse.Namespace) -> int:
     return 0
 
 
+def run_detect(args: argparse.Namespace) -> int:
+    from geographer_pipeline.areas import load_analysis_areas
+    from geographer_pipeline.cache import connect
+    from geographer_pipeline.content.validate import load_categories
+    from geographer_pipeline.detect.mapillary import class_map
+    from geographer_pipeline.detect.owl import OwlDetector
+    from geographer_pipeline.detect.run import detect_area
+    from geographer_pipeline.mapillary.client import MapillaryClient, load_token
+
+    area = load_analysis_areas().get(args.area)
+    if area is None:
+        print(f"Unknown area {args.area}; see the analysis list in pipeline/areas.yaml")
+        return 2
+    categories, errors = load_categories()
+    if errors:
+        print("\n".join(errors))
+        return 1
+    client = MapillaryClient(load_token())
+    owl = OwlDetector(categories, args.device)
+    with connect() as db:
+        detect_area(client, db, area, owl, class_map(categories))
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
@@ -52,6 +79,8 @@ def main(argv: list[str] | None = None) -> int:
         return 1
     if args.command == "index":
         return run_index(args)
+    if args.command == "detect":
+        return run_detect(args)
     return 0
 
 

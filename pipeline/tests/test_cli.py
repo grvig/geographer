@@ -19,3 +19,8 @@ def test_no_command_prints_help_and_fails(capsys):
 def test_index_rejects_unknown_country_before_any_request(capsys):
     assert main(["index", "IN", "ZZ"]) == 2
     assert "Unknown country code" in capsys.readouterr().out
+
+
+def test_detect_rejects_unknown_area_before_any_request(capsys):
+    assert main(["detect", "atlantis"]) == 2
+    assert "Unknown area atlantis" in capsys.readouterr().out
