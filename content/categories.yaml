@@ -8,15 +8,19 @@
 #   overlay_colour: outline colour in the viewer
 #   scene:          true for whole-scene clues (soil, vegetation), false for objects
 #
-# Mapillary values come from the map feature docs and still need confirming
-# against real /detections responses before the pipeline relies on them.
+# Mapillary values are the ones seen in real /detections responses (checked
+# 2026-11-24 on 40 images across the five countries).
+#
+# OWLv2 thresholds: at 0.2 the detector returned mostly look-alikes (concrete
+# blocks, painted tree trunks, striped barriers), so each category starts higher
+# and gets tuned with the eval script.
 
 - id: bollard
   label: Bollard
   detector:
     owl:
-      prompts: ["a roadside bollard", "a short road delineator post"]
-      threshold: 0.2
+      prompts: ["a roadside bollard post", "a short road delineator post"]
+      threshold: 0.3
   overlay_colour: "#f59e0b"
   scene: false
 
@@ -26,7 +30,7 @@
     mapillary: [object--support--utility-pole]
     owl:
       prompts: ["a utility pole"]
-      threshold: 0.2
+      threshold: 0.3
   overlay_colour: "#38bdf8"
   scene: false
 
@@ -35,7 +39,8 @@
   detector:
     owl:
       prompts: ["a roadside milestone", "a kilometre marker stone", "a small distance marker post"]
-      threshold: 0.2
+      # Highest scoring look-alike in testing was 0.29.
+      threshold: 0.4
   overlay_colour: "#f472b6"
   scene: false
 
@@ -44,4 +49,11 @@
   detector:
     mapillary: [object--street-light]
   overlay_colour: "#a3e635"
+  scene: false
+
+- id: sign-back
+  label: Sign back
+  detector:
+    mapillary: [object--traffic-sign--back, object--traffic-sign--direction-back]
+  overlay_colour: "#c084fc"
   scene: false
