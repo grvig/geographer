@@ -1,5 +1,6 @@
 """Local cache in data/cache.sqlite, so every stage can resume where it stopped."""
 
+import json
 import sqlite3
 from pathlib import Path
 
@@ -96,3 +97,15 @@ def area_images(db: sqlite3.Connection, area: str) -> list[sqlite3.Row]:
     return db.execute(
         "SELECT * FROM images WHERE area = ? ORDER BY sequence, captured_at", (area,)
     ).fetchall()
+
+
+def save_detections(db: sqlite3.Connection, image_id: str, detections: list) -> None:
+    # detections: (id, Detection) pairs. Replaces whatever the image had before.
+    rows = [
+        (image_id, detection_id, d.category, d.source, json.dumps(d.shape()), d.score)
+        for detection_id, d in detections
+    ]
+    with db:
+        db.execute("DELETE FROM detections WHERE image_id = ?", (image_id,))
+        db.executemany("INSERT INTO detections VALUES (?, ?, ?, ?, ?, ?)", rows)
+        db.execute("UPDATE images SET detected = 1 WHERE id = ?", (image_id,))

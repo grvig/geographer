@@ -16,6 +16,7 @@ class ImagePoint:
     lat: float
     is_pano: bool
     captured_at: int
+    sequence: str
 
 
 def tile_xy(lon: float, lat: float, zoom: int = ZOOM) -> tuple[int, int]:
@@ -59,6 +60,7 @@ def decode_image_points(data: bytes, z: int, x: int, y: int) -> list[ImagePoint]
             lat=lat,
             is_pano=bool(properties.get("is_pano")),
             captured_at=int(properties.get("captured_at", 0)),
+            sequence=str(properties.get("sequence_id", "")),
         )
         points.append(point)
     return points

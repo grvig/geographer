@@ -38,12 +38,14 @@ def test_tiles_for_bbox_covers_every_tile_once():
 def test_decodes_points_with_top_left_origin():
     x, y = tile_xy(*BENGALURU)
     data = encode_points(
-        (0, 0, {"id": 845419122985554, "is_pano": False, "captured_at": 5}),
+        (0, 0, {"id": 845419122985554, "captured_at": 5, "sequence_id": "s1"}),
         (4096, 4096, {"id": 7, "is_pano": True}),
     )
     top_left, bottom_right = decode_image_points(data, 14, x, y)
     assert top_left.id == "845419122985554"
     assert top_left.captured_at == 5
+    assert top_left.sequence == "s1"
+    assert not top_left.is_pano
     assert bottom_right.is_pano
     # A flipped y axis would swap the north and south edges.
     assert top_left.lat > bottom_right.lat
