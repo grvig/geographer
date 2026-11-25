@@ -7,6 +7,7 @@ from pathlib import Path
 import requests
 from dotenv import load_dotenv
 
+GRAPH_URL = "https://graph.mapillary.com"
 TILES_URL = "https://tiles.mapillary.com"
 ENV_FILE = Path(__file__).resolve().parents[2] / ".env"
 RETRY_STATUSES = {429, 500, 502, 503, 504}
@@ -34,26 +35,39 @@ class MapillaryClient:
         self.session.headers["Authorization"] = f"OAuth {token}"
         self.sleep = sleep
 
-    def get(self, url: str, params: dict | None = None) -> requests.Response:
-        # Errors name the URL without its query, so the token never reaches logs.
+    def get(
+        self, url: str, params: dict | None = None, headers: dict | None = None
+    ) -> requests.Response:
+        # Errors leave out the query, so tokens and signatures stay out of logs.
+        name = url.split("?")[0]
         for attempt in range(self.retries + 1):
             last_attempt = attempt == self.retries
             wait = self.backoff * 2**attempt
             try:
-                response = self.session.get(url, params=params, timeout=30)
+                response = self.session.get(
+                    url, params=params, headers=headers, timeout=30
+                )
             except (requests.ConnectionError, requests.Timeout) as error:
                 if last_attempt:
-                    raise MapillaryError(f"Could not reach {url}") from error
+                    raise MapillaryError(f"Could not reach {name}") from error
                 self.sleep(wait)
                 continue
             if response.status_code in RETRY_STATUSES and not last_attempt:
                 self.sleep(wait)
                 continue
             if not response.ok:
-                raise MapillaryError(f"HTTP {response.status_code} from {url}")
+                raise MapillaryError(f"HTTP {response.status_code} from {name}")
             return response
-        raise MapillaryError(f"No response from {url}")
+        raise MapillaryError(f"No response from {name}")
 
     def tile(self, z: int, x: int, y: int) -> bytes:
         url = f"{TILES_URL}/maps/vtp/mly1_public/2/{z}/{x}/{y}"
         return self.get(url, {"access_token": self.token}).content
+
+    def graph(self, path: str, fields: list[str], **params) -> dict:
+        params["fields"] = ",".join(fields)
+        return self.get(f"{GRAPH_URL}/{path}", params).json()
+
+    def download(self, url: str) -> bytes:
+        # Image URLs are signed CDN links: the token is not needed and is not sent.
+        return self.get(url, headers={"Authorization": None}).content

@@ -10,16 +10,18 @@ from geographer_pipeline.mapillary.client import (
 )
 
 
-def response(status, content=b""):
-    return SimpleNamespace(status_code=status, ok=status < 400, content=content)
+def response(status, content=b"", data=None):
+    return SimpleNamespace(
+        status_code=status, ok=status < 400, content=content, json=lambda: data
+    )
 
 
 def make_client(*outcomes):
     queue = list(outcomes)
     calls = []
 
-    def get(url, params=None, timeout=None):
-        calls.append(url)
+    def get(url, params=None, headers=None, timeout=None):
+        calls.append((url, params, headers))
         outcome = queue.pop(0)
         if isinstance(outcome, Exception):
             raise outcome
@@ -53,6 +55,23 @@ def test_client_errors_are_not_retried():
     with pytest.raises(MapillaryError):
         client.get("https://graph.mapillary.com/123")
     assert len(calls) == 1
+
+
+def test_graph_joins_fields_and_passes_params():
+    client, calls, _ = make_client(response(200, data={"data": []}))
+    assert client.graph("images", ["id", "sequence"], image_ids="1,2") == {"data": []}
+    url, params, _ = calls[0]
+    assert url == "https://graph.mapillary.com/images"
+    assert params == {"fields": "id,sequence", "image_ids": "1,2"}
+
+
+def test_download_drops_token_and_hides_signature_in_errors():
+    client, calls, _ = make_client(response(200, b"jpeg"), response(403))
+    assert client.download("https://cdn.example/a.jpg?sig=abc") == b"jpeg"
+    assert calls[0][2] == {"Authorization": None}
+    with pytest.raises(MapillaryError) as error:
+        client.download("https://cdn.example/b.jpg?sig=abc")
+    assert "sig" not in str(error.value)
 
 
 def test_token_comes_from_env_file(tmp_path, monkeypatch):
