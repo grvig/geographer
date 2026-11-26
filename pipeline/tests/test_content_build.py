@@ -72,3 +72,15 @@ def test_attribution_lists_every_reference():
         "| `fr-a/01.jpg` | pipe\\|name | 2020-10-23 "
         "| [Mapillary image](https://www.mapillary.com/app/?pKey=42) |"
     ) in text
+
+
+def test_build_copies_reference_photos_and_drops_stale_ones(tmp_path):
+    content = make_content(tmp_path / "content", ["fr-a"])
+    (content / "refs" / "fr-a").mkdir(parents=True)
+    (content / "refs" / "fr-a" / "01.jpg").write_bytes(b"jpeg")
+    stale = tmp_path / "out" / "refs" / "gone" / "01.jpg"
+    stale.parent.mkdir(parents=True)
+    stale.write_bytes(b"old")
+    assert build(content, tmp_path / "out" / "clues.json") == 0
+    assert (tmp_path / "out" / "refs" / "fr-a" / "01.jpg").read_bytes() == b"jpeg"
+    assert not stale.exists()

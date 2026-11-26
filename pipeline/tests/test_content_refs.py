@@ -11,13 +11,14 @@ from geographer_pipeline.content.validate import CONTENT_DIR, load_clues
 from geographer_pipeline.detect.crop import crop_path
 from geographer_pipeline.mapillary.images import cache_images
 
-CLUE = "fr-bollard-white-black-band"
+# A clue with no reference photos yet.
+CLUE = "in-milestone-green-top"
 
 
 @pytest.fixture
 def setup(tmp_path):
     content = tmp_path / "content"
-    shutil.copytree(CONTENT_DIR, content, ignore=shutil.ignore_patterns("refs"))
+    shutil.copytree(CONTENT_DIR, content)
     db = connect(tmp_path / "cache.sqlite")
     cache_images(FakeClient(), db, ["7", "8"], "area")
     for image_id in ["7", "8"]:
@@ -31,7 +32,7 @@ def test_copies_the_crop_and_lists_it_in_the_clue(setup):
     db, content, crops = setup
     assert add_reference(db, CLUE, "7", "d1", content, crops) == f"{CLUE}/01.jpg"
     assert add_reference(db, CLUE, "8", "d1", content, crops) == f"{CLUE}/02.jpg"
-    clue_file = content / "clues" / "bollard" / f"{CLUE}.yaml"
+    clue_file = content / "clues" / "kilometre-marker" / f"{CLUE}.yaml"
     references = yaml.safe_load(clue_file.read_text(encoding="utf-8"))["references"]
     assert references[0] == {
         "file": f"{CLUE}/01.jpg",
