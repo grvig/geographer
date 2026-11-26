@@ -5,6 +5,7 @@
 #   detector:
 #     mapillary:    Mapillary class values that map to this category
 #     owl:          OWLv2 text prompts, and the score threshold for this category
+#   negatives:      look-alikes that are not clues, for the matcher's "none of these"
 #   overlay_colour: outline colour in the viewer
 #   scene:          true for whole-scene clues (soil, vegetation), false for objects
 #
@@ -23,6 +24,7 @@
       # Other countries' bollards will need their own prompts once tested.
       prompts: ["a white roadside bollard post"]
       threshold: 0.4
+  negatives: ["a road sign on a metal pole", "a wooden fence post", "a tree trunk", "a concrete block"]
   overlay_colour: "#f59e0b"
   scene: false
 
@@ -33,6 +35,7 @@
     owl:
       prompts: ["a utility pole"]
       threshold: 0.3
+  negatives: ["a tree trunk", "a street light pole", "a road sign on a metal pole"]
   overlay_colour: "#38bdf8"
   scene: false
 
@@ -44,6 +47,7 @@
       # markers scored 0.45-0.64; the best look-alike scored 0.40.
       prompts: ["a roadside milestone", "a kilometre marker stone"]
       threshold: 0.42
+  negatives: ["a road sign on a metal pole", "a concrete block", "a rock"]
   overlay_colour: "#f472b6"
   scene: false
 
@@ -51,6 +55,7 @@
   label: Street light
   detector:
     mapillary: [object--street-light]
+  negatives: ["a traffic light", "a road sign"]
   overlay_colour: "#a3e635"
   scene: false
 
@@ -58,5 +63,6 @@
   label: Sign back
   detector:
     mapillary: [object--traffic-sign--back, object--traffic-sign--direction-back]
+  negatives: ["the front of a road sign", "an advertising board"]
   overlay_colour: "#c084fc"
   scene: false

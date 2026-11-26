@@ -45,6 +45,12 @@
           }
         }
       },
+      "negatives": {
+        "description": "Things often mistaken for this category, described by look. They give the matcher a 'none of these' answer.",
+        "type": "array",
+        "uniqueItems": true,
+        "items": { "type": "string", "minLength": 3 }
+      },
       "overlay_colour": { "type": "string", "pattern": "^#[0-9a-f]{6}$" },
       "scene": { "type": "boolean" }
     }
