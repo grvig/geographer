@@ -40,6 +40,15 @@ the look-alike warning.
 **Abstain rather than guess.** When the top confidence is low, or the top two are close, the object
 is shown as unknown in its category.
 
+**How a match is scored.** Each candidate clue gets `weight * visual + (1 - weight) * text`: the best
+CLIP similarity between the crop and the clue's reference photos, and the similarity between the crop
+and the clue's description. A softmax turns the scores into confidences. "None of these" is always a
+candidate: its visual score is a fixed floor (what an unrelated object typically scores against a
+reference, about 0.70 on Burgundy crops) and its text score is the best of the category's
+`negatives`. A clue without reference photos gets the same floor, so it can only win on its
+description, which on small crops is weak. In practice a clue needs reference photos to be named.
+All the numbers live in `pipeline/matching.yaml`; `eval` reports how a change does.
+
 **Two detectors.** Mapillary's own detections cover classes such as utility poles and street lights.
 OWLv2, an open-vocabulary detector, covers objects Mapillary has no class for, such as bollards.
 Overlapping boxes (IoU above 0.5) are merged, keeping the Mapillary polygon.

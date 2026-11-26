@@ -67,8 +67,11 @@ Run commands from `pipeline/`:
 python -m geographer_pipeline index         # start points for every country in areas.yaml
 python -m geographer_pipeline index IN FR   # or just some of them
 python -m geographer_pipeline detect saulieu   # find objects in an analysis area
+python -m geographer_pipeline match saulieu    # match its objects to clues
 python -m geographer_pipeline export saulieu   # write its shards for the site
 python -m geographer_pipeline debug 123 456    # draw detections into data/debug/
+python -m geographer_pipeline reference fr-bollard-white-black-band 123 d1   # crop -> reference photo
+python -m geographer_pipeline eval             # test matching on the reference photos
 pytest && ruff check . && ruff format --check .
 ```
 

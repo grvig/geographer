@@ -35,7 +35,7 @@ Built in vertical slices so something visible works early. Each milestone lists 
 - [x] Hand-written sample shard
 - [x] Outlines drawn with the TagComponent, colour-coded by category
 - [x] Hover card: descriptor, meaning, regions, confidence, look-alikes, location warning
-- [ ] Reference photo next to the scene crop in the card (needs references from M5)
+- [x] Reference photo next to the scene crop in the card
 - [x] Click to pin a card
 - [x] "In view" sidebar
 - [x] Filters: categories, minimum confidence, verified only
@@ -56,11 +56,11 @@ Built in vertical slices so something visible works early. Each milestone lists 
 
 ## M4: Real matching
 
-- [ ] CLIP embeddings for crops, references and clue descriptions
-- [ ] Visual + text scoring with configurable weight
-- [ ] Softmax confidence and abstaining
-- [ ] Offline reverse geocoding and the look-alike flag
-- [ ] Alternatives shown in the card
+- [x] CLIP embeddings for crops, references and clue descriptions
+- [x] Visual + text scoring with configurable weight
+- [x] Softmax confidence and abstaining, with "none of these" per category
+- [x] Offline reverse geocoding and the look-alike flag
+- [x] Alternatives shown in the card, and closest guesses on unknown objects
 - [ ] **MVP:** India plus about 3 more countries; bollards, utility poles and 1–2 more categories
 
 ## M5: Curation tool
@@ -68,13 +68,13 @@ Built in vertical slices so something visible works early. Each milestone lists 
 - [ ] Local FastAPI server and dev-only review route
 - [ ] Review queue, lowest confidence first
 - [ ] Accept, relabel, reject, unknown variant, use as reference
-- [ ] Reference authoring into `content/refs/`
+- [ ] Reference authoring into `content/refs/` (a `reference` command exists; the review UI doesn't yet)
 - [ ] Verified flag flowing into shards
-- [ ] `ATTRIBUTION.md` generated from reference metadata
+- [x] `ATTRIBUTION.md` generated from reference metadata
 
 ## M6: Eval and probe
 
-- [ ] Held-out split and eval script
+- [ ] Held-out split and eval script (leave-one-out over reference photos exists; labelled detections come with M5)
 - [ ] Report: per-category top-1 accuracy, abstention rate, most-confused pairs
 - [ ] Threshold, margin, temperature and weight tuning
 - [ ] Logistic-regression probe per category once there are enough labels
