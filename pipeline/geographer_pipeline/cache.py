@@ -4,6 +4,8 @@ import json
 import sqlite3
 from pathlib import Path
 
+import numpy as np
+
 DATA_DIR = Path(__file__).resolve().parents[2] / "data"
 CACHE_FILE = DATA_DIR / "cache.sqlite"
 
@@ -155,3 +157,36 @@ def images_with_detections(db: sqlite3.Connection, area: str) -> list[str]:
         (area,),
     )
     return [row["image_id"] for row in rows]
+
+
+def unembedded_detections(db: sqlite3.Connection, area: str, model: str) -> list:
+    return db.execute(
+        "SELECT d.image_id, d.id FROM detections d"
+        " JOIN images i ON i.id = d.image_id"
+        " LEFT JOIN embeddings e ON e.image_id = d.image_id"
+        " AND e.detection_id = d.id AND e.model = ?"
+        " WHERE i.area = ? AND e.vector IS NULL ORDER BY d.image_id, d.rowid",
+        (model, area),
+    ).fetchall()
+
+
+def save_embeddings(db: sqlite3.Connection, keys: list, model: str, vectors) -> None:
+    # keys: (image id, detection id) pairs, one per row of vectors.
+    rows = [
+        (image_id, detection_id, model, vector.astype(np.float32).tobytes())
+        for (image_id, detection_id), vector in zip(keys, vectors, strict=True)
+    ]
+    with db:
+        db.executemany("INSERT OR REPLACE INTO embeddings VALUES (?, ?, ?, ?)", rows)
+
+
+def area_embeddings(db: sqlite3.Connection, area: str, model: str) -> dict:
+    rows = db.execute(
+        "SELECT e.image_id, e.detection_id, e.vector FROM embeddings e"
+        " JOIN images i ON i.id = e.image_id WHERE i.area = ? AND e.model = ?",
+        (area, model),
+    )
+    return {
+        (row["image_id"], row["detection_id"]): np.frombuffer(row["vector"], np.float32)
+        for row in rows
+    }
