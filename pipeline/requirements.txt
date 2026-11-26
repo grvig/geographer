@@ -9,3 +9,5 @@ reverse_geocoder>=1.5
 Pillow>=11.0
 # OWLv2 box scaling was checked on 5.24; recheck before moving to a new major.
 transformers>=5.24,<6
+open_clip_torch>=4.2,<5
+numpy>=2.0
