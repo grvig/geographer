@@ -218,6 +218,7 @@ export default function ExplorePage() {
           <FloatingCard
             card={card}
             image={analysis.image}
+            photo={image?.photo ?? null}
             library={analysis.library}
             onClose={() => setCard(null)}
           />

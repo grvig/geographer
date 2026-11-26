@@ -1,6 +1,7 @@
 import type { CSSProperties } from "react";
 import type { ClueLibrary } from "../data/loadClues";
 import type { ShardImage } from "../data/shardSchema";
+import type { Photo } from "../lib/sceneCrop";
 import ClueCard from "./ClueCard";
 
 export type CardState = {
@@ -12,11 +13,18 @@ export type CardState = {
 type Props = {
   card: CardState;
   image: ShardImage;
+  photo: Photo | null;
   library: ClueLibrary;
   onClose: () => void;
 };
 
-export default function FloatingCard({ card, image, library, onClose }: Props) {
+export default function FloatingCard({
+  card,
+  image,
+  photo,
+  library,
+  onClose,
+}: Props) {
   const detection = image.detections.find(
     (candidate) => candidate.id === card.detectionId,
   );
@@ -47,6 +55,7 @@ export default function FloatingCard({ card, image, library, onClose }: Props) {
       <ClueCard
         detection={detection}
         library={library}
+        photo={photo}
         imagePlace={{ country: image.country, admin1: image.admin1 }}
       />
     </div>

@@ -1,6 +1,7 @@
 import type { ClueLibrary } from "../data/loadClues";
 import type { Clue, Region } from "../data/clueSchema";
 import type { Detection } from "../data/shardSchema";
+import type { Photo } from "../lib/sceneCrop";
 import { placeName } from "../lib/places";
 import ClueImages from "./ClueImages";
 
@@ -19,9 +20,16 @@ type Props = {
   library: ClueLibrary;
   // Where the image was taken, for the look-alike warning.
   imagePlace: { country: string; admin1: string | null };
+  // The current image, to show this object next to the reference photo.
+  photo?: Photo | null;
 };
 
-export default function ClueCard({ detection, library, imagePlace }: Props) {
+export default function ClueCard({
+  detection,
+  library,
+  imagePlace,
+  photo = null,
+}: Props) {
   const category = library.categories.get(detection.category);
   const categoryLabel = category?.label ?? detection.category;
   let clue: Clue | undefined;
@@ -77,7 +85,7 @@ export default function ClueCard({ detection, library, imagePlace }: Props) {
       </ul>
       <p>{clue.signifies}</p>
       <p className="text-stone-400">{clue.visual.features.join(" · ")}</p>
-      <ClueImages clue={clue} />
+      <ClueImages clue={clue} shape={detection.shape} photo={photo} />
       {alternatives.length > 0 && (
         <p className="text-stone-300">
           Could also be:{" "}

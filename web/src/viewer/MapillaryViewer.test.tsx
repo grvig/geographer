@@ -64,6 +64,7 @@ describe("MapillaryViewer", () => {
       sequenceId: "seq_9",
       lngLat: { lat: 1, lng: 2 },
       creatorUsername: "a",
+      image: { src: "blob:photo", naturalWidth: 2048, naturalHeight: 1536 },
     };
     act(() => fake.handlers.get("image")?.({ image }));
     expect(onImageChange).toHaveBeenCalledWith({
@@ -72,6 +73,7 @@ describe("MapillaryViewer", () => {
       lat: 1,
       lon: 2,
       creator: "a",
+      photo: { src: "blob:photo", width: 2048, height: 1536 },
     });
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });

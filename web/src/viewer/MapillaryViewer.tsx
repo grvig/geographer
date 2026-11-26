@@ -7,6 +7,7 @@ import {
 } from "mapillary-js";
 import "mapillary-js/dist/mapillary.css";
 import type { Detection } from "../data/shardSchema";
+import type { Photo } from "../lib/sceneCrop";
 import { toTags } from "./detectionTags";
 
 export type ViewerImage = {
@@ -16,6 +17,8 @@ export type ViewerImage = {
   lat: number;
   lon: number;
   creator: string;
+  // The photo the viewer loaded, for cutting out objects. null if not cached.
+  photo: Photo | null;
 };
 
 type Props = {
@@ -50,12 +53,22 @@ export default function MapillaryViewer(props: Props) {
   const handleImage = useEffectEvent((image: MapillaryImage) => {
     shownIdRef.current = image.id;
     setError(null);
+    let photo: Photo | null = null;
+    const element = image.image;
+    if (element) {
+      photo = {
+        src: element.src,
+        width: element.naturalWidth,
+        height: element.naturalHeight,
+      };
+    }
     onImageChange({
       id: image.id,
       sequenceId: image.sequenceId,
       lat: image.lngLat.lat,
       lon: image.lngLat.lng,
       creator: image.creatorUsername,
+      photo,
     });
   });
   const handleBearing = useEffectEvent(onBearingChange);

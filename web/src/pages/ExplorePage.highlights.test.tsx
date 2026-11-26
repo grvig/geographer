@@ -102,6 +102,7 @@ async function openImage() {
     lat: 47.3,
     lon: 4.2,
     creator: "a",
+    photo: null,
   };
   act(() => viewer.props?.onImageChange(image));
   expect(await screen.findByText("2 outlines")).toBeInTheDocument();

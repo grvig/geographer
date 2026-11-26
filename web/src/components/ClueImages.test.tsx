@@ -23,13 +23,21 @@ const clue: Clue = {
   status: "draft",
 };
 
+const photo = { src: "https://cdn/photo.jpg", width: 2048, height: 1536 };
+
 describe("ClueImages", () => {
   it("shows the first reference photo with its credit", () => {
-    render(<ClueImages clue={clue} />);
-    const photo = screen.getByRole("img", {
+    render(
+      <ClueImages
+        clue={clue}
+        shape={{ type: "rect", coords: [0.4, 0.4, 0.6, 0.8] }}
+        photo={null}
+      />,
+    );
+    const picture = screen.getByRole("img", {
       name: "Reference photo: White bollard",
     });
-    expect(photo.getAttribute("src")).toMatch(
+    expect(picture.getAttribute("src")).toMatch(
       /\/data\/refs\/fr-bollard\/01\.jpg$/,
     );
     expect(screen.getByText(/Pierre/)).toBeInTheDocument();
@@ -39,7 +47,28 @@ describe("ClueImages", () => {
   });
 
   it("says so when the clue has no photo yet", () => {
-    render(<ClueImages clue={{ ...clue, references: [] }} />);
+    render(
+      <ClueImages
+        clue={{ ...clue, references: [] }}
+        shape={{ type: "rect", coords: [0.4, 0.4, 0.6, 0.8] }}
+        photo={null}
+      />,
+    );
     expect(screen.getByText("No reference photo yet.")).toBeInTheDocument();
+  });
+
+  it("cuts the object out of the current photo when it has loaded", () => {
+    render(
+      <ClueImages
+        clue={clue}
+        shape={{ type: "rect", coords: [0.4, 0.4, 0.6, 0.8] }}
+        photo={photo}
+      />,
+    );
+    const crop = screen.getByRole("img", {
+      name: /cut from the current image/,
+    });
+    expect(crop.style.backgroundImage).toContain("https://cdn/photo.jpg");
+    expect(screen.getByText("Here")).toBeInTheDocument();
   });
 });
