@@ -10,7 +10,7 @@ from geographer_pipeline.cache import (
     save_matches,
 )
 from geographer_pipeline.detect.geometry import Detection
-from geographer_pipeline.export.shards import export_area
+from geographer_pipeline.export.shards import export_area, shard_shape
 from geographer_pipeline.geocode import geocode_images
 from geographer_pipeline.mapillary.images import cache_images
 
@@ -95,3 +95,19 @@ def test_exports_matches_when_there_are_any(tmp_path):
         0.2,
         None,
     )
+
+
+def test_outlines_are_simplified_but_stay_polygons():
+    wobbly = [[0.1, 0.1], [0.2, 0.1001], [0.3, 0.1], [0.3, 0.5], [0.1, 0.5], [0.1, 0.1]]
+    shape = shard_shape({"type": "polygon", "coords": wobbly})
+    assert shape["coords"] == [
+        [0.1, 0.1],
+        [0.3, 0.1],
+        [0.3, 0.5],
+        [0.1, 0.5],
+        [0.1, 0.1],
+    ]
+    sliver = {"type": "polygon", "coords": [[0.1, 0.1], [0.1001, 0.1], [0.1, 0.1]]}
+    assert shard_shape(sliver) == sliver
+    rect = {"type": "rect", "coords": [0.1, 0.1, 0.2, 0.2]}
+    assert shard_shape(rect) == rect

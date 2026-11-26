@@ -6,6 +6,7 @@ from geographer_pipeline.detect.geometry import (
     non_max_suppression,
     polygon_area,
     polygon_box,
+    simplify,
 )
 
 SQUARE = [(0.1, 0.1), (0.3, 0.1), (0.3, 0.3), (0.1, 0.3)]
@@ -44,3 +45,10 @@ def test_suppression_keeps_one_box_per_object_whatever_its_category():
     ]
     kept = non_max_suppression(detections, 0.5)
     assert [(d.category, d.score) for d in kept] == [("bollard", 0.7), ("bollard", 0.3)]
+
+
+def test_simplify_drops_points_that_barely_bend_the_outline():
+    ring = [(0, 0), (0.5, 0.0001), (1, 0), (1, 1), (0.5, 1.0001), (0, 1), (0, 0)]
+    assert simplify(ring, 0.001) == [(0, 0), (1, 0), (1, 1), (0, 1), (0, 0)]
+    # A real corner stays.
+    assert simplify([(0, 0), (0.5, 0.2), (1, 0)], 0.001) == [(0, 0), (0.5, 0.2), (1, 0)]

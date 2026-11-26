@@ -1,5 +1,6 @@
 """Detections and the box maths for comparing them. Coordinates are 0-1."""
 
+import math
 from dataclasses import dataclass
 
 # x0, y0, x1, y1 with the origin at the image's top-left corner.
@@ -60,3 +61,27 @@ def non_max_suppression(detections: list[Detection], limit: float) -> list[Detec
         if not duplicate:
             kept.append(detection)
     return kept
+
+
+def simplify(points: list, tolerance: float) -> list:
+    # Douglas-Peucker: keep the point farthest from the line between the ends if
+    # it strays more than the tolerance, and repeat on both halves.
+    if len(points) < 3:
+        return list(points)
+    (x0, y0), (x1, y1) = points[0], points[-1]
+    length = math.hypot(x1 - x0, y1 - y0)
+    farthest = 0.0
+    index = 0
+    for i, (x, y) in enumerate(points[1:-1], 1):
+        if length == 0:
+            # A closed ring starts and ends on the same point.
+            distance = math.hypot(x - x0, y - y0)
+        else:
+            distance = abs((y1 - y0) * x - (x1 - x0) * y + x1 * y0 - y1 * x0) / length
+        if distance > farthest:
+            farthest = distance
+            index = i
+    if farthest <= tolerance:
+        return [points[0], points[-1]]
+    head = simplify(points[: index + 1], tolerance)
+    return head[:-1] + simplify(points[index:], tolerance)

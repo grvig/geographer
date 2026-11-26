@@ -5,11 +5,25 @@ from collections import defaultdict
 from pathlib import Path
 
 from geographer_pipeline.cache import area_images, image_detections, image_matches
+from geographer_pipeline.detect.geometry import simplify
 from geographer_pipeline.export.index import write_json
 
 # Must match SHARD_SCHEMA_VERSION in web/src/data/shardSchema.ts.
 SCHEMA_VERSION = 1
+# About 4 px on a 2048 px image: invisible in the viewer, and it shrinks
+# Mapillary's outlines several times over.
+OUTLINE_TOLERANCE = 0.002
 SHARD_DIR = Path(__file__).resolve().parents[3] / "web" / "public" / "data" / "images"
+
+
+def shard_shape(shape: dict) -> dict:
+    if shape["type"] != "polygon":
+        return shape
+    points = simplify(shape["coords"], OUTLINE_TOLERANCE)
+    # The site needs at least a triangle.
+    if len(points) < 3:
+        return shape
+    return {"type": "polygon", "coords": points}
 
 
 def shard_image(row, detections, matches: dict) -> dict:
@@ -19,7 +33,7 @@ def shard_image(row, detections, matches: dict) -> dict:
             "id": detection["id"],
             "category": detection["category"],
             "source": detection["source"],
-            "shape": json.loads(detection["shape"]),
+            "shape": shard_shape(json.loads(detection["shape"])),
             "clue": None,
             # Until the match stage has run, the detector's own score stands in.
             "confidence": round(detection["score"], 2),
