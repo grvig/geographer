@@ -6,9 +6,11 @@ from pathlib import Path
 
 DATA_DIR = Path(__file__).resolve().parents[2] / "data"
 CACHE_FILE = DATA_DIR / "cache.sqlite"
-SCHEMA_VERSION = 1
 
-SCHEMA = """
+# Each entry moves the cache up one version. Never edit an entry once a cache
+# has been built with it; add a new one instead.
+MIGRATIONS = [
+    """
 CREATE TABLE images (
     id TEXT PRIMARY KEY,
     area TEXT NOT NULL,
@@ -37,7 +39,35 @@ CREATE TABLE detections (
     score REAL NOT NULL,
     PRIMARY KEY (image_id, id)
 );
-"""
+""",
+    """
+-- One vector per detection crop and model.
+CREATE TABLE embeddings (
+    image_id TEXT NOT NULL,
+    detection_id TEXT NOT NULL,
+    model TEXT NOT NULL,
+    vector BLOB NOT NULL,
+    PRIMARY KEY (image_id, detection_id, model),
+    FOREIGN KEY (image_id, detection_id)
+        REFERENCES detections (image_id, id) ON DELETE CASCADE
+);
+
+-- clue is NULL when the matcher abstained. alternatives is JSON
+-- [{"clue", "confidence"}]. consistent is NULL when there is no clue.
+CREATE TABLE matches (
+    image_id TEXT NOT NULL,
+    detection_id TEXT NOT NULL,
+    clue TEXT,
+    confidence REAL NOT NULL,
+    alternatives TEXT NOT NULL,
+    consistent INTEGER,
+    PRIMARY KEY (image_id, detection_id),
+    FOREIGN KEY (image_id, detection_id)
+        REFERENCES detections (image_id, id) ON DELETE CASCADE
+);
+""",
+]
+SCHEMA_VERSION = len(MIGRATIONS)
 
 
 class CacheError(Exception):
@@ -50,15 +80,15 @@ def connect(path: Path = CACHE_FILE) -> sqlite3.Connection:
     db.row_factory = sqlite3.Row
     db.execute("PRAGMA foreign_keys = ON")
     version = db.execute("PRAGMA user_version").fetchone()[0]
-    if version == 0:
-        db.executescript(SCHEMA)
-        db.execute(f"PRAGMA user_version = {SCHEMA_VERSION}")
-    elif version != SCHEMA_VERSION:
+    if version > SCHEMA_VERSION:
         db.close()
         raise CacheError(
-            f"{path} uses cache schema {version}, this code expects "
-            f"{SCHEMA_VERSION}. Delete the file to rebuild it."
+            f"{path} uses cache schema {version}, newer than this code's "
+            f"{SCHEMA_VERSION}. Update the code or delete the file to rebuild it."
         )
+    for number, script in enumerate(MIGRATIONS[version:], version + 1):
+        db.executescript(script)
+        db.execute(f"PRAGMA user_version = {number}")
     return db
 
 
