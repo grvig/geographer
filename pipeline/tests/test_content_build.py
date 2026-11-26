@@ -3,6 +3,7 @@ import shutil
 
 import yaml
 
+from geographer_pipeline.content.attribution import attribution_markdown
 from geographer_pipeline.content.build import build
 from geographer_pipeline.content.validate import CONTENT_DIR
 
@@ -36,6 +37,8 @@ def test_build_writes_sorted_clues_and_site_categories(tmp_path):
     assert [clue["id"] for clue in data["clues"]] == ["fr-a", "in-b"]
     bollard = data["categories"][0]
     assert set(bollard) == {"id", "label", "overlay_colour", "scene"}
+    credits = (tmp_path / "ATTRIBUTION.md").read_text(encoding="utf-8")
+    assert "no reference photos yet" in credits
 
 
 def test_build_refuses_invalid_content(tmp_path, capsys):
@@ -46,3 +49,26 @@ def test_build_refuses_invalid_content(tmp_path, capsys):
     assert build(content, out) == 1
     assert not out.exists()
     assert "Not built" in capsys.readouterr().err
+
+
+def test_attribution_lists_every_reference():
+    clues = [
+        {
+            "id": "fr-a",
+            "references": [
+                {
+                    "file": "fr-a/01.jpg",
+                    "mapillary_image_id": "42",
+                    "creator": "pipe|name",
+                    "captured_at": "2020-10-23",
+                }
+            ],
+        },
+        {"id": "in-b"},
+    ]
+    text = attribution_markdown(clues)
+    assert "CC-BY-SA 4.0" in text
+    assert (
+        "| `fr-a/01.jpg` | pipe\\|name | 2020-10-23 "
+        "| [Mapillary image](https://www.mapillary.com/app/?pKey=42) |"
+    ) in text

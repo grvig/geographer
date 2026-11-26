@@ -3,6 +3,7 @@
 import sys
 from pathlib import Path
 
+from geographer_pipeline.content.attribution import attribution_markdown
 from geographer_pipeline.content.validate import (
     CONTENT_DIR,
     load_categories,
@@ -35,5 +36,8 @@ def build(content_dir: Path = CONTENT_DIR, out_path: Path = CLUES_JSON) -> int:
     }
     out_path.parent.mkdir(parents=True, exist_ok=True)
     write_json(out_path, data)
+    # The credits sit at the repository root, next to the content folder.
+    attribution = content_dir.parent / "ATTRIBUTION.md"
+    attribution.write_text(attribution_markdown(clues), encoding="utf-8", newline="\n")
     print(f"Wrote {len(clues)} clues to {out_path}")
     return 0
