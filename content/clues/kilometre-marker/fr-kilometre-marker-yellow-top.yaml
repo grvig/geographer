@@ -8,6 +8,8 @@ signifies: "Counts the kilometres along a departmental road, one of the 'D' road
 regions:
   - country: FR
     strength: typical
+lookalikes: [in-milestone-yellow-top]
+tell_apart: "Read the yellow top. Here it holds only the road number, starting with D. An Indian highway milestone has the highway number on top and a place name with its distance in kilometres on the white body."
 sources:
   - title: "Plonk It: France"
     url: https://www.plonkit.net/france

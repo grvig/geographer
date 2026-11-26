@@ -8,8 +8,8 @@ signifies: "Marks distance along a National Highway. The colour of the top tells
 regions:
   - country: IN
     strength: typical
-lookalikes: [in-milestone-green-top]
-tell_apart: "Check the colour of the top: yellow for National Highways, green for State Highways."
+lookalikes: [in-milestone-green-top, fr-kilometre-marker-yellow-top]
+tell_apart: "Check the colour of the top: yellow for National Highways, green for State Highways. French departmental markers also have yellow tops, but they show only a road number starting with D, with no place name or distance on the body."
 sources:
   - title: "Plonk It: India"
     url: https://www.plonkit.net/india
