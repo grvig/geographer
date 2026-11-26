@@ -21,7 +21,7 @@ def test_index_rejects_unknown_country_before_any_request(capsys):
     assert "Unknown country code" in capsys.readouterr().out
 
 
-@pytest.mark.parametrize("command", ["detect", "export"])
+@pytest.mark.parametrize("command", ["detect", "match", "export"])
 def test_area_commands_reject_unknown_areas(capsys, command):
     assert main([command, "atlantis"]) == 2
     assert "Unknown area atlantis" in capsys.readouterr().out

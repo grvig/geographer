@@ -26,11 +26,23 @@ def build_parser() -> argparse.ArgumentParser:
     detect.add_argument(
         "--redo", action="store_true", help="detect again in images already done"
     )
+    match = commands.add_parser("match", help="match an area's objects to clues")
+    match.add_argument("area", help="an analysis area name from areas.yaml")
+    match.add_argument("--device", default="cuda", help="cuda or cpu")
     export = commands.add_parser("export", help="write shards for an analysis area")
     export.add_argument("area", help="an analysis area name from areas.yaml")
     debug = commands.add_parser("debug", help="draw cached detections on images")
     debug.add_argument("images", nargs="+", help="Mapillary image ids")
     return parser
+
+
+def find_area(name: str):
+    from geographer_pipeline.areas import load_analysis_areas
+
+    area = load_analysis_areas().get(name)
+    if area is None:
+        print(f"Unknown area {name}; see the analysis list in pipeline/areas.yaml")
+    return area
 
 
 def run_index(args: argparse.Namespace) -> int:
@@ -55,7 +67,6 @@ def run_index(args: argparse.Namespace) -> int:
 
 
 def run_detect(args: argparse.Namespace) -> int:
-    from geographer_pipeline.areas import load_analysis_areas
     from geographer_pipeline.cache import connect
     from geographer_pipeline.content.validate import load_categories
     from geographer_pipeline.detect.mapillary import class_map
@@ -63,9 +74,8 @@ def run_detect(args: argparse.Namespace) -> int:
     from geographer_pipeline.detect.run import detect_area
     from geographer_pipeline.mapillary.client import MapillaryClient, load_token
 
-    area = load_analysis_areas().get(args.area)
+    area = find_area(args.area)
     if area is None:
-        print(f"Unknown area {args.area}; see the analysis list in pipeline/areas.yaml")
         return 2
     categories, errors = load_categories()
     if errors:
@@ -78,15 +88,41 @@ def run_detect(args: argparse.Namespace) -> int:
     return 0
 
 
+def run_match(args: argparse.Namespace) -> int:
+    from geographer_pipeline.cache import connect
+    from geographer_pipeline.content.validate import load_categories, load_clues
+    from geographer_pipeline.match.clip import ClipEmbedder
+    from geographer_pipeline.match.references import build_candidates
+    from geographer_pipeline.match.run import match_area
+    from geographer_pipeline.match.settings import load_settings
+
+    area = find_area(args.area)
+    if area is None:
+        return 2
+    clues, errors = load_clues()
+    if errors:
+        print("\n".join(errors))
+        return 1
+    categories, _ = load_categories()
+    settings = load_settings()
+    embedder = ClipEmbedder(settings.model, settings.pretrained, args.device)
+    candidates = build_candidates(categories, clues, embedder)
+    by_id = {clue["id"]: clue for clue in clues}
+    with connect() as db:
+        total, matched = match_area(
+            db, area.name, embedder, candidates, by_id, settings
+        )
+    print(f"{area.name}: {matched} of {total} objects matched to a clue")
+    return 0
+
+
 def run_export(args: argparse.Namespace) -> int:
-    from geographer_pipeline.areas import load_analysis_areas
     from geographer_pipeline.cache import connect, images_with_detections
     from geographer_pipeline.export.index import add_analysed
     from geographer_pipeline.export.shards import export_area
 
-    area = load_analysis_areas().get(args.area)
+    area = find_area(args.area)
     if area is None:
-        print(f"Unknown area {args.area}; see the analysis list in pipeline/areas.yaml")
         return 2
     with connect() as db:
         paths = export_area(db, area)
@@ -135,6 +171,8 @@ def main(argv: list[str] | None = None) -> int:
         return run_index(args)
     if args.command == "detect":
         return run_detect(args)
+    if args.command == "match":
+        return run_match(args)
     if args.command == "export":
         return run_export(args)
     if args.command == "debug":
