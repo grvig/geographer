@@ -2,6 +2,7 @@ import type { ClueLibrary } from "../data/loadClues";
 import type { Clue, Region } from "../data/clueSchema";
 import type { Detection } from "../data/shardSchema";
 import { placeName } from "../lib/places";
+import ClueImages from "./ClueImages";
 
 const STRENGTH_WORDS: Record<Region["strength"], string> = {
   only: "Only in",
@@ -76,9 +77,7 @@ export default function ClueCard({ detection, library, imagePlace }: Props) {
       </ul>
       <p>{clue.signifies}</p>
       <p className="text-stone-400">{clue.visual.features.join(" · ")}</p>
-      {clue.references.length === 0 && (
-        <p className="text-stone-500">No reference photo yet.</p>
-      )}
+      <ClueImages clue={clue} />
       {alternatives.length > 0 && (
         <p className="text-stone-300">
           Could also be:{" "}
