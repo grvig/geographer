@@ -1,0 +1,21 @@
+# How detections are matched to clues. Start values; tune them with the eval command.
+#
+# Each candidate clue gets  score = weight * visual + (1 - weight) * text, where
+#   visual = best cosine similarity between the crop and the clue's reference photos
+#   text   = cosine similarity between the crop and the clue's visual description
+# Confidence is a softmax over the scores. "None of these" is always a candidate:
+# its visual score is none_visual and its text score is the best of the category's
+# negative descriptions. A clue without reference photos also gets none_visual,
+# so it can only beat "none of these" on its description.
+
+model: ViT-B-16
+pretrained: datacomp_xl_s13b_b90k
+weight: 0.75
+temperature: 0.02
+# Roughly what an unrelated roadside object scores against a clue's references
+# (measured on Burgundy crops: median 0.64, 90th percentile 0.70).
+none_visual: 0.70
+# Abstain when the best clue's confidence is below this...
+threshold: 0.5
+# ...or when the runner-up is closer than this.
+margin: 0.1
