@@ -31,6 +31,12 @@ def build_parser() -> argparse.ArgumentParser:
     match.add_argument("--device", default="cuda", help="cuda or cpu")
     export = commands.add_parser("export", help="write shards for an analysis area")
     export.add_argument("area", help="an analysis area name from areas.yaml")
+    reference = commands.add_parser(
+        "reference", help="use a detection crop as a clue's reference photo"
+    )
+    reference.add_argument("clue", help="clue id, e.g. fr-bollard-white-black-band")
+    reference.add_argument("image", help="Mapillary image id")
+    reference.add_argument("detection", help="detection id in that image, e.g. d2")
     debug = commands.add_parser("debug", help="draw cached detections on images")
     debug.add_argument("images", nargs="+", help="Mapillary image ids")
     return parser
@@ -133,6 +139,20 @@ def run_export(args: argparse.Namespace) -> int:
     return 0
 
 
+def run_reference(args: argparse.Namespace) -> int:
+    from geographer_pipeline.cache import connect
+    from geographer_pipeline.content.refs import add_reference
+
+    with connect() as db:
+        try:
+            file = add_reference(db, args.clue, args.image, args.detection)
+        except ValueError as error:
+            print(error)
+            return 1
+    print(f"Added content/refs/{file}; rerun match to use it")
+    return 0
+
+
 def run_debug(args: argparse.Namespace) -> int:
     from PIL import Image
 
@@ -175,6 +195,8 @@ def main(argv: list[str] | None = None) -> int:
         return run_match(args)
     if args.command == "export":
         return run_export(args)
+    if args.command == "reference":
+        return run_reference(args)
     if args.command == "debug":
         return run_debug(args)
     return 0
