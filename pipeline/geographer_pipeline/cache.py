@@ -190,3 +190,14 @@ def area_embeddings(db: sqlite3.Connection, area: str, model: str) -> dict:
         (row["image_id"], row["detection_id"]): np.frombuffer(row["vector"], np.float32)
         for row in rows
     }
+
+
+def save_matches(db: sqlite3.Connection, area: str, rows: list) -> None:
+    # Matching is cheap, so each run replaces the area's matches wholesale.
+    with db:
+        db.execute(
+            "DELETE FROM matches WHERE image_id IN"
+            " (SELECT id FROM images WHERE area = ?)",
+            (area,),
+        )
+        db.executemany("INSERT INTO matches VALUES (?, ?, ?, ?, ?, ?)", rows)
