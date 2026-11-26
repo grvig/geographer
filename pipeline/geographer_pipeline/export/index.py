@@ -2,6 +2,7 @@
 
 import json
 import random
+import time
 from pathlib import Path
 
 from geographer_pipeline.areas import Country
@@ -35,10 +36,19 @@ def sample_image_ids(
     return sorted(chosen, key=int)
 
 
-def write_json(path: Path, data: dict) -> None:
+def write_json(path: Path, data: dict, attempts: int = 4, sleep=time.sleep) -> None:
     text = json.dumps(data, indent=2, ensure_ascii=False)
-    # Plain \n on every OS, so regenerated files don't differ by platform.
-    path.write_text(text + "\n", encoding="utf-8", newline="\n")
+    # A synced folder (OneDrive) can hold a file for a moment while it uploads,
+    # and Windows then refuses the write. Waiting briefly is enough.
+    for attempt in range(attempts):
+        try:
+            # Plain \n on every OS, so regenerated files don't differ by platform.
+            path.write_text(text + "\n", encoding="utf-8", newline="\n")
+            return
+        except OSError:
+            if attempt == attempts - 1:
+                raise
+            sleep(0.5 * (attempt + 1))
 
 
 def write_index(country: Country, ids: list[str], out_dir: Path) -> None:

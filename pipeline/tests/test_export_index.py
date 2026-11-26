@@ -9,6 +9,7 @@ from geographer_pipeline.export.index import (
     build_indexes,
     sample_image_ids,
     write_index,
+    write_json,
 )
 from geographer_pipeline.mapillary.tiles import tile_to_lonlat, tile_xy
 
@@ -84,3 +85,20 @@ def test_analysed_images_survive_resampling(tmp_path):
     index = json.loads((tmp_path / "FR.json").read_text(encoding="utf-8"))
     assert index["images"] == ["7"]
     assert index["analysed"] == ["4", "5", "30"]
+
+
+def test_write_json_waits_out_a_briefly_locked_file(tmp_path, monkeypatch):
+    path = tmp_path / "data.json"
+    real_write = type(path).write_text
+    failures = [OSError(22, "Invalid argument")]
+
+    def flaky_write(self, *args, **kwargs):
+        if failures:
+            raise failures.pop()
+        return real_write(self, *args, **kwargs)
+
+    monkeypatch.setattr(type(path), "write_text", flaky_write)
+    waits = []
+    write_json(path, {"a": 1}, sleep=waits.append)
+    assert json.loads(path.read_text(encoding="utf-8")) == {"a": 1}
+    assert waits == [0.5]
