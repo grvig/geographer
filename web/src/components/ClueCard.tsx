@@ -15,6 +15,8 @@ function percent(confidence: number) {
   return `${Math.round(confidence * 100)}%`;
 }
 
+type Alternative = Detection["alternatives"][number];
+
 type Props = {
   detection: Detection;
   library: ClueLibrary;
@@ -32,10 +34,24 @@ export default function ClueCard({
 }: Props) {
   const category = library.categories.get(detection.category);
   const categoryLabel = category?.label ?? detection.category;
+
+  function describe(list: Alternative[]) {
+    return list
+      .map(
+        (alternative) =>
+          `${library.clues.get(alternative.clue)!.title} (${percent(alternative.confidence)})`,
+      )
+      .join(", ");
+  }
   let clue: Clue | undefined;
   if (detection.clue) {
     clue = library.clues.get(detection.clue);
   }
+
+  // Alternatives naming clues that exist in this version of the library.
+  const alternatives = detection.alternatives.filter((alternative) =>
+    library.clues.has(alternative.clue),
+  );
 
   if (!clue) {
     return (
@@ -45,6 +61,11 @@ export default function ClueCard({
           It doesn't match any clue in the library closely enough to say where
           it points.
         </p>
+        {alternatives.length > 0 && (
+          <p className="text-sm text-stone-300">
+            Closest: {describe(alternatives)}
+          </p>
+        )}
       </article>
     );
   }
@@ -52,9 +73,6 @@ export default function ClueCard({
   const lookalikes = clue.lookalikes
     .map((id) => library.clues.get(id))
     .filter((other) => other !== undefined);
-  const alternatives = detection.alternatives.filter((alternative) =>
-    library.clues.has(alternative.clue),
-  );
 
   return (
     <article className="space-y-2 text-sm">
@@ -88,13 +106,7 @@ export default function ClueCard({
       <ClueImages clue={clue} shape={detection.shape} photo={photo} />
       {alternatives.length > 0 && (
         <p className="text-stone-300">
-          Could also be:{" "}
-          {alternatives
-            .map(
-              (alternative) =>
-                `${library.clues.get(alternative.clue)!.title} (${percent(alternative.confidence)})`,
-            )
-            .join(", ")}
+          Could also be: {describe(alternatives)}
         </p>
       )}
       {lookalikes.length > 0 && (

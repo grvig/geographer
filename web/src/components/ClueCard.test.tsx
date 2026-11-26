@@ -117,5 +117,9 @@ describe("ClueCard", () => {
     expect(screen.getByRole("heading")).toHaveTextContent(
       "Unknown kilometre marker",
     );
+    // The best guesses are still worth knowing.
+    expect(
+      screen.getByText("Closest: Green-top milestone (11%)"),
+    ).toBeInTheDocument();
   });
 });
