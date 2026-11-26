@@ -29,6 +29,10 @@ def build_parser() -> argparse.ArgumentParser:
     match = commands.add_parser("match", help="match an area's objects to clues")
     match.add_argument("area", help="an analysis area name from areas.yaml")
     match.add_argument("--device", default="cuda", help="cuda or cpu")
+    evaluate = commands.add_parser(
+        "eval", help="test the matcher on the clues' own reference photos"
+    )
+    evaluate.add_argument("--device", default="cuda", help="cuda or cpu")
     export = commands.add_parser("export", help="write shards for an analysis area")
     export.add_argument("area", help="an analysis area name from areas.yaml")
     reference = commands.add_parser(
@@ -122,6 +126,25 @@ def run_match(args: argparse.Namespace) -> int:
     return 0
 
 
+def run_eval(args: argparse.Namespace) -> int:
+    from geographer_pipeline.content.validate import load_categories, load_clues
+    from geographer_pipeline.eval.run import leave_one_out, report
+    from geographer_pipeline.match.clip import ClipEmbedder
+    from geographer_pipeline.match.references import build_candidates
+    from geographer_pipeline.match.settings import load_settings
+
+    clues, errors = load_clues()
+    if errors:
+        print("\n".join(errors))
+        return 1
+    categories, _ = load_categories()
+    settings = load_settings()
+    embedder = ClipEmbedder(settings.model, settings.pretrained, args.device)
+    candidates = build_candidates(categories, clues, embedder)
+    print(report(leave_one_out(candidates, settings)))
+    return 0
+
+
 def run_export(args: argparse.Namespace) -> int:
     from geographer_pipeline.cache import connect, images_with_detections
     from geographer_pipeline.export.index import add_analysed
@@ -193,6 +216,8 @@ def main(argv: list[str] | None = None) -> int:
         return run_detect(args)
     if args.command == "match":
         return run_match(args)
+    if args.command == "eval":
+        return run_eval(args)
     if args.command == "export":
         return run_export(args)
     if args.command == "reference":
