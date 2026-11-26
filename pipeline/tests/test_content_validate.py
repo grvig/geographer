@@ -129,6 +129,6 @@ def test_bad_yaml_and_schema_errors_are_reported(clues_dir):
 
 def test_duplicate_category_ids_are_reported(content):
     entry = "- {id: pole, label: Pole, detector: {mapillary: [object--support--pole]},"
-    entry += " overlay_colour: '#38bdf8', scene: false}\n"
+    entry += " negatives: [a tree], overlay_colour: '#38bdf8', scene: false}\n"
     _, errors = load_categories(content(entry + entry))
     assert errors == ["categories.yaml: duplicate id pole"]
