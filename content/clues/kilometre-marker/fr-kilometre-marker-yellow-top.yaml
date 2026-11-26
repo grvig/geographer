@@ -1,0 +1,14 @@
+id: fr-kilometre-marker-yellow-top
+category: kilometre-marker
+title: Kilometre marker with a yellow top
+visual:
+  description: "A white roadside marker block with a rounded yellow top showing a road number in black"
+  features: [white block, rounded yellow top, road number such as D26]
+signifies: "Counts the kilometres along a departmental road, one of the 'D' roads that each French département looks after. The département's logo is often on the front."
+regions:
+  - country: FR
+    strength: typical
+sources:
+  - title: "Plonk It: France"
+    url: https://www.plonkit.net/france
+status: draft
