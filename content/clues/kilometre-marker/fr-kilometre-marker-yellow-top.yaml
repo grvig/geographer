@@ -10,6 +10,15 @@ regions:
     strength: typical
 lookalikes: [in-milestone-yellow-top]
 tell_apart: "Read the yellow top. Here it holds only the road number, starting with D. An Indian highway milestone has the highway number on top and a place name with its distance in kilometres on the white body."
+references:
+  - file: fr-kilometre-marker-yellow-top/01.jpg
+    mapillary_image_id: "317463726614089"
+    creator: "mprins"
+    captured_at: "2019-09-20"
+  - file: fr-kilometre-marker-yellow-top/02.jpg
+    mapillary_image_id: "179953317363997"
+    creator: "mprins"
+    captured_at: "2019-09-20"
 sources:
   - title: "Plonk It: France"
     url: https://www.plonkit.net/france

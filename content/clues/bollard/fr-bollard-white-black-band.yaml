@@ -8,6 +8,23 @@ signifies: "The usual roadside bollard on French country roads. Spotting one is 
 regions:
   - country: FR
     strength: typical
+references:
+  - file: fr-bollard-white-black-band/01.jpg
+    mapillary_image_id: "1179044179233282"
+    creator: "Pierre_mlt"
+    captured_at: "2020-10-23"
+  - file: fr-bollard-white-black-band/02.jpg
+    mapillary_image_id: "342949020514335"
+    creator: "Pierre_mlt"
+    captured_at: "2020-10-23"
+  - file: fr-bollard-white-black-band/03.jpg
+    mapillary_image_id: "1695422107308298"
+    creator: "Pierre_mlt"
+    captured_at: "2020-10-23"
+  - file: fr-bollard-white-black-band/04.jpg
+    mapillary_image_id: "214469236905788"
+    creator: "Pierre_mlt"
+    captured_at: "2020-10-23"
 sources:
   - title: "Plonk It: France"
     url: https://www.plonkit.net/france
