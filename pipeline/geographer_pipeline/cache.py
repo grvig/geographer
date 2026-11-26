@@ -201,3 +201,8 @@ def save_matches(db: sqlite3.Connection, area: str, rows: list) -> None:
             (area,),
         )
         db.executemany("INSERT INTO matches VALUES (?, ?, ?, ?, ?, ?)", rows)
+
+
+def image_matches(db: sqlite3.Connection, image_id: str) -> dict[str, sqlite3.Row]:
+    rows = db.execute("SELECT * FROM matches WHERE image_id = ?", (image_id,))
+    return {row["detection_id"]: row for row in rows}

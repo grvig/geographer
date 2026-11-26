@@ -4,7 +4,7 @@ import json
 from collections import defaultdict
 from pathlib import Path
 
-from geographer_pipeline.cache import area_images, image_detections
+from geographer_pipeline.cache import area_images, image_detections, image_matches
 from geographer_pipeline.export.index import write_json
 
 # Must match SHARD_SCHEMA_VERSION in web/src/data/shardSchema.ts.
@@ -12,9 +12,7 @@ SCHEMA_VERSION = 1
 SHARD_DIR = Path(__file__).resolve().parents[3] / "web" / "public" / "data" / "images"
 
 
-def shard_image(row, detections) -> dict:
-    # Matching to clues comes later, so for now every object is unknown and its
-    # confidence is the detector's own score.
+def shard_image(row, detections, matches: dict) -> dict:
     entries = []
     for detection in detections:
         entry = {
@@ -23,11 +21,19 @@ def shard_image(row, detections) -> dict:
             "source": detection["source"],
             "shape": json.loads(detection["shape"]),
             "clue": None,
+            # Until the match stage has run, the detector's own score stands in.
             "confidence": round(detection["score"], 2),
             "alternatives": [],
             "consistent": None,
             "verified": False,
         }
+        match = matches.get(detection["id"])
+        if match:
+            entry["clue"] = match["clue"]
+            entry["confidence"] = match["confidence"]
+            entry["alternatives"] = json.loads(match["alternatives"])
+            if match["consistent"] is not None:
+                entry["consistent"] = bool(match["consistent"])
         entries.append(entry)
     return {
         "id": row["id"],
@@ -72,7 +78,8 @@ def export_area(db, area, shard_dir: Path = SHARD_DIR) -> list[Path]:
         for row in rows:
             image = kept.pop(row["id"], None)
             if image is None:
-                image = shard_image(row, image_detections(db, row["id"]))
+                detections = image_detections(db, row["id"])
+                image = shard_image(row, detections, image_matches(db, row["id"]))
             images.append(image)
         images.extend(kept.values())
         shard = {
