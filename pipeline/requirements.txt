@@ -11,3 +11,6 @@ Pillow>=11.0
 transformers>=5.24,<6
 open_clip_torch>=4.2,<5
 numpy>=2.0
+# The local curation server only.
+fastapi>=0.165
+uvicorn>=0.54
