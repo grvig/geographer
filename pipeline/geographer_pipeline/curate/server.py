@@ -2,18 +2,20 @@
 /curate page. It is never deployed; the curate command binds it to 127.0.0.1.
 """
 
+import re
 from contextlib import closing
 from dataclasses import dataclass
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException
+from fastapi.responses import FileResponse
 
 from geographer_pipeline.areas import AREAS_FILE, load_analysis_areas
 from geographer_pipeline.cache import CACHE_FILE, connect
 from geographer_pipeline.content.validate import CONTENT_DIR, load_clues
 from geographer_pipeline.curate.labels import load_labels
 from geographer_pipeline.curate.queue import review_queue
-from geographer_pipeline.detect.crop import CROPS_DIR
+from geographer_pipeline.detect.crop import CROPS_DIR, crop_path
 
 
 @dataclass(frozen=True)
@@ -56,6 +58,15 @@ def create_app(paths: Paths = Paths()) -> FastAPI:
         with closing(connect(paths.cache)) as db:
             total, items = review_queue(db, area, labels, categories, limit)
         return {"total": total, "items": items}
+
+    @app.get("/api/crops/{image_id}/{detection_id}.jpg")
+    def crop(image_id: str, detection_id: str) -> FileResponse:
+        # Plain ids only, so no request can reach outside the crops folder.
+        plain = re.fullmatch(r"\d+", image_id) and re.fullmatch(r"d\d+", detection_id)
+        path = crop_path(image_id, detection_id, paths.crops)
+        if not plain or not path.is_file():
+            raise HTTPException(404, "No such crop")
+        return FileResponse(path, media_type="image/jpeg")
 
     @app.get("/api/clues")
     def clues() -> list[dict]:

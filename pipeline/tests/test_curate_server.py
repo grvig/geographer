@@ -84,3 +84,13 @@ def test_clues_for_the_relabel_picker(world):
         "category": "bollard",
         "title": "White bollard with a dark band",
     } in clues
+
+
+def test_serves_crops_and_nothing_else(world):
+    api = client(world)
+    response = api.get("/api/crops/5/d1.jpg")
+    assert response.status_code == 200
+    assert response.headers["content-type"] == "image/jpeg"
+    assert api.get("/api/crops/5/d9.jpg").status_code == 404
+    assert api.get("/api/crops/5/..%2F..%2Fcache.jpg").status_code == 404
+    assert api.get("/api/crops/x5/d1.jpg").status_code == 404
