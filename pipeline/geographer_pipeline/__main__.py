@@ -147,14 +147,21 @@ def run_eval(args: argparse.Namespace) -> int:
 
 def run_export(args: argparse.Namespace) -> int:
     from geographer_pipeline.cache import connect, images_with_detections
+    from geographer_pipeline.content.validate import load_clues
+    from geographer_pipeline.curate.labels import load_labels
     from geographer_pipeline.export.index import add_analysed
     from geographer_pipeline.export.shards import export_area
 
     area = find_area(args.area)
     if area is None:
         return 2
+    clues, errors = load_clues()
+    if errors:
+        print("\n".join(errors))
+        return 1
+    by_id = {clue["id"]: clue for clue in clues}
     with connect() as db:
-        paths = export_area(db, area)
+        paths = export_area(db, area, labels=load_labels(area.name), clues=by_id)
         found = images_with_detections(db, area.name)
     # Images with something found in them become start points on the site.
     total = add_analysed(area.country, found)

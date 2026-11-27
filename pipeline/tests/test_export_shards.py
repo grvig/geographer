@@ -1,5 +1,6 @@
 import json
 
+import pytest
 from test_mapillary_images import FakeClient
 
 from geographer_pipeline.areas import AnalysisArea
@@ -56,19 +57,48 @@ def test_writes_one_shard_per_sequence_with_unknown_objects(tmp_path):
     assert images_with_detections(db, AREA.name) == ["1"]
 
 
-def test_keeps_hand_checked_images(tmp_path):
+def test_keeps_hand_drawn_images_and_rebuilds_the_rest(tmp_path):
     db = analysed_cache(tmp_path)
     [path] = export_area(db, AREA, tmp_path / "images")
     shard = json.loads(path.read_text(encoding="utf-8"))
-    shard["images"][0]["detections"][0]["verified"] = True
-    shard["images"][0]["detections"][0]["clue"] = "fr-bollard"
+    shard["images"][0]["detections"][0]["clue"] = "edited-by-hand"
     manual = {"id": "9", "detections": [{"verified": False, "source": "manual"}]}
     shard["images"].append(manual)
     path.write_text(json.dumps(shard), encoding="utf-8")
     export_area(db, AREA, tmp_path / "images")
     images = json.loads(path.read_text(encoding="utf-8"))["images"]
     assert [image["id"] for image in images] == ["1", "2", "9"]
-    assert images[0]["detections"][0]["clue"] == "fr-bollard"
+    # Edits to generated entries don't survive: labels are the way to change them.
+    assert images[0]["detections"][0]["clue"] is None
+
+
+def verdict(detection_id, action, box, **extra):
+    label = {"detection_id": detection_id, "action": action, "box": box}
+    return {("1", detection_id): {**label, **extra}}
+
+
+@pytest.mark.parametrize(
+    ("label", "expected"),
+    [
+        (verdict("d1", "accept", [0.1, 0.2, 0.15, 0.4]), ("d1", None, True)),
+        (
+            verdict("d1", "relabel", [0.1, 0.2, 0.15, 0.4], clue="fr-b"),
+            ("d1", "fr-b", True),
+        ),
+        (verdict("d1", "reject", [0.1, 0.2, 0.15, 0.4]), ("d2", None, False)),
+        (verdict("d1", "unknown", [0.1, 0.2, 0.15, 0.4]), ("d1", None, True)),
+        # Labelled when d1 was somewhere else: the label no longer applies.
+        (verdict("d1", "reject", [0.7, 0.7, 0.8, 0.8]), ("d1", None, False)),
+    ],
+)
+def test_labels_override_the_matcher(tmp_path, label, expected):
+    db = analysed_cache(tmp_path)
+    clues = {"fr-b": {"regions": [{"country": "FR", "strength": "typical"}]}}
+    [path] = export_area(db, AREA, tmp_path / "images", labels=label, clues=clues)
+    first = json.loads(path.read_text(encoding="utf-8"))["images"][0]["detections"][0]
+    assert (first["id"], first["clue"], first["verified"]) == expected
+    if first["clue"] == "fr-b":
+        assert (first["confidence"], first["consistent"]) == (1.0, True)
 
 
 def test_exports_matches_when_there_are_any(tmp_path):
