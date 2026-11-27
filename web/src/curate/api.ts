@@ -69,6 +69,6 @@ export function sendLabel(target: Target, action: Action, clue?: string) {
   return call("/api/labels", z.unknown(), { ...target, action, clue });
 }
 
-export function useAsReference(target: Target, clue: string) {
+export function addReference(target: Target, clue: string) {
   return call("/api/references", reference, { ...target, clue });
 }

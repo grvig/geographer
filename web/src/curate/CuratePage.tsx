@@ -1,11 +1,22 @@
-import { useEffect, useState } from "react";
+import { useEffect, useEffectEvent, useState } from "react";
 import {
   loadAreas,
   loadClueOptions,
   loadQueue,
+  sendLabel,
+  addReference,
+  type Action,
   type ClueOption,
   type QueueItem,
 } from "./api";
+import { categoryName } from "./names";
+import ReviewItem from "./ReviewItem";
+
+const SHORTCUTS: Record<string, Action> = {
+  a: "accept",
+  x: "reject",
+  u: "unknown",
+};
 
 const NOT_RUNNING =
   "Can't reach the curation server. Start it with `python -m geographer_pipeline curate` in pipeline/.";
@@ -49,6 +60,42 @@ export default function CuratePage() {
 
   const titles = new Map(clues.map((clue) => [clue.id, clue.title]));
 
+  // Each verdict is saved, then the item leaves the queue.
+  async function settle(item: QueueItem, save: () => Promise<unknown>) {
+    try {
+      await save();
+      setError(null);
+      setItems((current) => current?.filter((other) => other !== item) ?? null);
+      setTotal((count) => count - 1);
+    } catch (reason) {
+      setError((reason as Error).message);
+    }
+  }
+
+  function target(item: QueueItem) {
+    return { area, image_id: item.image_id, detection_id: item.detection_id };
+  }
+
+  const handleKey = useEffectEvent((event: KeyboardEvent) => {
+    const action = SHORTCUTS[event.key];
+    const first = items?.[0];
+    const typing = event.target instanceof HTMLSelectElement;
+    if (!action || !first || typing || event.ctrlKey || event.metaKey) {
+      return;
+    }
+    if (action === "accept" && !first.clue) {
+      return;
+    }
+    void settle(first, () => sendLabel(target(first), action));
+  });
+
+  useEffect(() => {
+    window.addEventListener("keydown", handleKey);
+    return () => {
+      window.removeEventListener("keydown", handleKey);
+    };
+  }, []);
+
   return (
     <div className="mx-auto w-full max-w-3xl space-y-4 p-6">
       <h1 className="text-xl font-semibold">Review</h1>
@@ -75,26 +122,23 @@ export default function CuratePage() {
         <p className="text-sm text-stone-400">{total} left to review</p>
       )}
       <ul className="space-y-2">
-        {items?.map((item) => (
-          <li
+        {items?.map((item, index) => (
+          <ReviewItem
             key={`${item.image_id}/${item.detection_id}`}
-            className="flex gap-3 rounded border border-stone-800 p-2"
-          >
-            <img
-              src={item.crop}
-              alt={`${item.category} ${item.detection_id} in image ${item.image_id}`}
-              className="h-28 w-20 shrink-0 rounded bg-stone-950 object-contain"
-            />
-            <div className="text-sm">
-              <p className="font-semibold">
-                {titles.get(item.clue ?? "") ?? `Unknown ${item.category}`}
-              </p>
-              <p className="text-stone-400">
-                {Math.round(item.confidence * 100)}% · {item.source} · image{" "}
-                {item.image_id}
-              </p>
-            </div>
-          </li>
+            item={item}
+            options={clues.filter((clue) => clue.category === item.category)}
+            title={
+              titles.get(item.clue ?? "") ??
+              `Unknown ${categoryName(item.category)}`
+            }
+            current={index === 0}
+            onAct={(action, clue) =>
+              settle(item, () => sendLabel(target(item), action, clue))
+            }
+            onReference={(clue) =>
+              settle(item, () => addReference(target(item), clue))
+            }
+          />
         ))}
       </ul>
     </div>
