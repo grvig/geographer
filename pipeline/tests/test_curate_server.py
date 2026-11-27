@@ -94,3 +94,36 @@ def test_serves_crops_and_nothing_else(world):
     assert api.get("/api/crops/5/d9.jpg").status_code == 404
     assert api.get("/api/crops/5/..%2F..%2Fcache.jpg").status_code == 404
     assert api.get("/api/crops/x5/d1.jpg").status_code == 404
+
+
+def post_label(api, detection_id, action, **extra):
+    body = {"area": "test", "image_id": "5", "detection_id": detection_id}
+    return api.post("/api/labels", json={**body, "action": action, **extra})
+
+
+def test_labelled_objects_leave_the_queue(world):
+    api = client(world)
+    response = post_label(api, "d2", "accept")
+    assert response.status_code == 200
+    assert response.json()["box"] == [0.5, 0.2, 0.55, 0.4]
+    assert post_label(api, "d1", "relabel", clue=BOLLARD).status_code == 200
+    body = api.get("/api/queue", params={"area": "test"}).json()
+    assert body["total"] == 0
+    lines = (world.content / "labels" / "test.jsonl").read_text(encoding="utf-8")
+    assert len(lines.splitlines()) == 2
+
+
+@pytest.mark.parametrize(
+    ("detection_id", "action", "extra", "status"),
+    [
+        ("d1", "accept", {}, 400),
+        ("d1", "relabel", {"clue": "fr-kilometre-marker-yellow-top"}, 400),
+        ("d1", "relabel", {}, 400),
+        ("d9", "reject", {}, 404),
+        ("d1", "maybe", {}, 422),
+    ],
+)
+def test_bad_labels_are_refused(world, detection_id, action, extra, status):
+    response = post_label(client(world), detection_id, action, **extra)
+    assert response.status_code == status
+    assert not (world.content / "labels" / "test.jsonl").exists()

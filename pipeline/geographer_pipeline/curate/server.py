@@ -2,20 +2,24 @@
 /curate page. It is never deployed; the curate command binds it to 127.0.0.1.
 """
 
+import json
 import re
 from contextlib import closing
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Literal
 
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse
+from pydantic import BaseModel
 
 from geographer_pipeline.areas import AREAS_FILE, load_analysis_areas
 from geographer_pipeline.cache import CACHE_FILE, connect
 from geographer_pipeline.content.validate import CONTENT_DIR, load_clues
-from geographer_pipeline.curate.labels import load_labels
+from geographer_pipeline.curate.labels import append_label, load_labels
 from geographer_pipeline.curate.queue import review_queue
 from geographer_pipeline.detect.crop import CROPS_DIR, crop_path
+from geographer_pipeline.export.shards import shape_box
 
 
 @dataclass(frozen=True)
@@ -24,6 +28,14 @@ class Paths:
     content: Path = CONTENT_DIR
     crops: Path = CROPS_DIR
     areas: Path = AREAS_FILE
+
+
+class LabelRequest(BaseModel):
+    area: str
+    image_id: str
+    detection_id: str
+    action: Literal["accept", "relabel", "reject", "unknown"]
+    clue: str | None = None
 
 
 def create_app(paths: Paths = Paths()) -> FastAPI:
@@ -67,6 +79,42 @@ def create_app(paths: Paths = Paths()) -> FastAPI:
         if not plain or not path.is_file():
             raise HTTPException(404, "No such crop")
         return FileResponse(path, media_type="image/jpeg")
+
+    def find_detection(area: str, image_id: str, detection_id: str):
+        with closing(connect(paths.cache)) as db:
+            row = db.execute(
+                "SELECT d.category, d.shape, m.clue FROM detections d"
+                " JOIN images i ON i.id = d.image_id"
+                " LEFT JOIN matches m"
+                " ON m.image_id = d.image_id AND m.detection_id = d.id"
+                " WHERE i.area = ? AND d.image_id = ? AND d.id = ?",
+                (area, image_id, detection_id),
+            ).fetchone()
+        if row is None:
+            raise HTTPException(404, "No such detection in this area")
+        return row
+
+    @app.post("/api/labels")
+    def label(request: LabelRequest) -> dict:
+        row = find_detection(request.area, request.image_id, request.detection_id)
+        if request.action == "accept" and row["clue"] is None:
+            raise HTTPException(400, "There is no match to accept; relabel it instead")
+        if request.action == "relabel":
+            same = [c for c in clue_library() if c["category"] == row["category"]]
+            if request.clue not in {clue["id"] for clue in same}:
+                raise HTTPException(
+                    400, f"{request.clue} is not a {row['category']} clue"
+                )
+        label = {
+            "image_id": request.image_id,
+            "detection_id": request.detection_id,
+            # Stored so the label can tell if detection is rerun and renumbered.
+            "box": [round(value, 4) for value in shape_box(json.loads(row["shape"]))],
+            "action": request.action,
+        }
+        if request.action == "relabel":
+            label["clue"] = request.clue
+        return append_label(request.area, label, paths.content / "labels")
 
     @app.get("/api/clues")
     def clues() -> list[dict]:
