@@ -41,6 +41,10 @@ def build_parser() -> argparse.ArgumentParser:
     reference.add_argument("clue", help="clue id, e.g. fr-bollard-white-black-band")
     reference.add_argument("image", help="Mapillary image id")
     reference.add_argument("detection", help="detection id in that image, e.g. d2")
+    curate = commands.add_parser(
+        "curate", help="start the local server behind the site's /curate page"
+    )
+    curate.add_argument("--port", type=int, default=8765)
     debug = commands.add_parser("debug", help="draw cached detections on images")
     debug.add_argument("images", nargs="+", help="Mapillary image ids")
     return parser
@@ -183,6 +187,19 @@ def run_reference(args: argparse.Namespace) -> int:
     return 0
 
 
+def run_curate(args: argparse.Namespace) -> int:
+    import uvicorn
+
+    from geographer_pipeline.curate.server import create_app
+
+    # 127.0.0.1 only: the server writes to content/ and must not be reachable
+    # from the network.
+    print(f"Curation server on http://127.0.0.1:{args.port}")
+    print("Start the site with `npm run dev` in web/ and open /curate")
+    uvicorn.run(create_app(), host="127.0.0.1", port=args.port, log_level="warning")
+    return 0
+
+
 def run_debug(args: argparse.Namespace) -> int:
     from PIL import Image
 
@@ -229,6 +246,8 @@ def main(argv: list[str] | None = None) -> int:
         return run_export(args)
     if args.command == "reference":
         return run_reference(args)
+    if args.command == "curate":
+        return run_curate(args)
     if args.command == "debug":
         return run_debug(args)
     return 0

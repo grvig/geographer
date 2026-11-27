@@ -25,3 +25,14 @@ def test_index_rejects_unknown_country_before_any_request(capsys):
 def test_area_commands_reject_unknown_areas(capsys, command):
     assert main([command, "atlantis"]) == 2
     assert "Unknown area atlantis" in capsys.readouterr().out
+
+
+def test_curate_serves_on_localhost_only(monkeypatch, capsys):
+    import uvicorn
+
+    calls = []
+    monkeypatch.setattr(uvicorn, "run", lambda app, **options: calls.append(options))
+    assert main(["curate", "--port", "9000"]) == 0
+    assert calls[0]["host"] == "127.0.0.1"
+    assert calls[0]["port"] == 9000
+    assert "/curate" in capsys.readouterr().out
