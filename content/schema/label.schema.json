@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/grvig/geographer/blob/main/content/schema/label.schema.json",
+  "title": "Label",
+  "description": "A person's verdict on one detection, one JSON object per line in content/labels/<area>.jsonl. A later line for the same detection replaces an earlier one.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["image_id", "detection_id", "box", "action", "at"],
+  "properties": {
+    "image_id": { "type": "string", "pattern": "^[0-9]+$" },
+    "detection_id": { "type": "string", "pattern": "^d[0-9]+$" },
+    "box": {
+      "description": "The detection's bounding box when labelled, so a label is dropped if detection is rerun and the id now points at another object.",
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": { "type": "number", "minimum": 0, "maximum": 1 }
+    },
+    "action": {
+      "description": "accept: the match is right. relabel: it is the given clue. reject: not a real object of this category. unknown: a real object that matches no clue yet.",
+      "enum": ["accept", "relabel", "reject", "unknown"]
+    },
+    "clue": { "type": "string", "pattern": "^[a-z]{2}-[a-z0-9]+(-[a-z0-9]+)*$" },
+    "at": { "type": "string", "format": "date-time" }
+  },
+  "if": { "properties": { "action": { "const": "relabel" } } },
+  "then": { "required": ["clue"] },
+  "else": { "not": { "required": ["clue"] } }
+}
