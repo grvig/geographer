@@ -80,6 +80,20 @@ downloads and finds in `data/` (ignored by git), so a second run only does what'
 `--redo` to run the detectors again after changing prompts or thresholds. The first
 run also downloads the OWLv2 model weights from Hugging Face.
 
+### Reviewing matches
+
+The review page checks the matcher's answers, least sure first. It needs two local servers:
+
+```sh
+python -m geographer_pipeline curate   # in pipeline/: the review server, on 127.0.0.1:8765
+npm run dev                            # in web/: then open http://localhost:5173/curate
+```
+
+Each object can be confirmed, given another clue, rejected as a false detection, marked as a variant
+no clue covers yet, or saved as a clue's reference photo. Verdicts are appended to
+`content/labels/<area>.jsonl`; the next `export` turns them into "checked by hand" on the site. The
+page only exists in development builds.
+
 ### Deploying
 
 The site deploys to Vercel with `web/` as the project's root directory. `web/vercel.json` serves

@@ -66,6 +66,13 @@ crops from them are distorted.
 **Hand-checked data wins.** Exporting an area rewrites its shards, except for images that have a
 detection labelled or verified by hand; those entries are kept as they are.
 
+**Labels are the record of what people checked.** The review page appends verdicts to
+`content/labels/<area>.jsonl`, one JSON line each, latest wins. Each label stores the detection's
+box, so if detection is rerun and ids shift, a label that no longer sits on the same object is
+ignored rather than applied to the wrong one. Export rebuilds every shard from the cache plus the
+labels; only hand-drawn (`manual`) entries are kept as they are. The review server listens on
+127.0.0.1 only, and the `/curate` route is left out of production builds.
+
 **Coverage through vector tiles.** The Graph API's bounding-box image search only accepts areas
 smaller than 0.01°, so the pipeline lists images in an area through Mapillary's coverage tiles at
 zoom 14 and then fetches metadata per image.

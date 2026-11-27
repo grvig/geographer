@@ -65,11 +65,11 @@ Built in vertical slices so something visible works early. Each milestone lists 
 
 ## M5: Curation tool
 
-- [ ] Local FastAPI server and dev-only review route
-- [ ] Review queue, lowest confidence first
-- [ ] Accept, relabel, reject, unknown variant, use as reference
-- [ ] Reference authoring into `content/refs/` (a `reference` command exists; the review UI doesn't yet)
-- [ ] Verified flag flowing into shards
+- [x] Local FastAPI server and dev-only review route
+- [x] Review queue, lowest confidence first
+- [x] Accept, relabel, reject, unknown variant, use as reference
+- [x] Reference authoring into `content/refs/`
+- [x] Verified flag flowing into shards
 - [x] `ATTRIBUTION.md` generated from reference metadata
 
 ## M6: Eval and probe
