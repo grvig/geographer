@@ -127,3 +127,16 @@ def test_bad_labels_are_refused(world, detection_id, action, extra, status):
     response = post_label(client(world), detection_id, action, **extra)
     assert response.status_code == status
     assert not (world.content / "labels" / "test.jsonl").exists()
+
+
+def test_a_crop_becomes_a_reference_and_counts_as_labelled(world):
+    api = client(world)
+    body = {"area": "test", "image_id": "5", "detection_id": "d1", "clue": BOLLARD}
+    response = api.post("/api/references", json=body)
+    assert response.status_code == 200
+    file = response.json()["file"]
+    assert (world.content / "refs" / file).is_file()
+    labels = (world.content / "labels" / "test.jsonl").read_text(encoding="utf-8")
+    assert '"action": "relabel"' in labels
+    # The same image can't give the clue a second reference.
+    assert api.post("/api/references", json=body).status_code == 409

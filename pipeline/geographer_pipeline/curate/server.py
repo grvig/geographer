@@ -15,6 +15,7 @@ from pydantic import BaseModel
 
 from geographer_pipeline.areas import AREAS_FILE, load_analysis_areas
 from geographer_pipeline.cache import CACHE_FILE, connect
+from geographer_pipeline.content.refs import add_reference
 from geographer_pipeline.content.validate import CONTENT_DIR, load_clues
 from geographer_pipeline.curate.labels import append_label, load_labels
 from geographer_pipeline.curate.queue import review_queue
@@ -28,6 +29,13 @@ class Paths:
     content: Path = CONTENT_DIR
     crops: Path = CROPS_DIR
     areas: Path = AREAS_FILE
+
+
+class ReferenceRequest(BaseModel):
+    area: str
+    image_id: str
+    detection_id: str
+    clue: str
 
 
 class LabelRequest(BaseModel):
@@ -94,18 +102,19 @@ def create_app(paths: Paths = Paths()) -> FastAPI:
             raise HTTPException(404, "No such detection in this area")
         return row
 
+    def check_clue(clue_id: str | None, category: str) -> None:
+        same = [clue for clue in clue_library() if clue["category"] == category]
+        if clue_id not in {clue["id"] for clue in same}:
+            raise HTTPException(400, f"{clue_id} is not a {category} clue")
+
     @app.post("/api/labels")
-    def label(request: LabelRequest) -> dict:
+    def add_label(request: LabelRequest) -> dict:
         row = find_detection(request.area, request.image_id, request.detection_id)
         if request.action == "accept" and row["clue"] is None:
             raise HTTPException(400, "There is no match to accept; relabel it instead")
         if request.action == "relabel":
-            same = [c for c in clue_library() if c["category"] == row["category"]]
-            if request.clue not in {clue["id"] for clue in same}:
-                raise HTTPException(
-                    400, f"{request.clue} is not a {row['category']} clue"
-                )
-        label = {
+            check_clue(request.clue, row["category"])
+        entry = {
             "image_id": request.image_id,
             "detection_id": request.detection_id,
             # Stored so the label can tell if detection is rerun and renumbered.
@@ -113,8 +122,34 @@ def create_app(paths: Paths = Paths()) -> FastAPI:
             "action": request.action,
         }
         if request.action == "relabel":
-            label["clue"] = request.clue
-        return append_label(request.area, label, paths.content / "labels")
+            entry["clue"] = request.clue
+        return append_label(request.area, entry, paths.content / "labels")
+
+    @app.post("/api/references")
+    def use_as_reference(request: ReferenceRequest) -> dict:
+        row = find_detection(request.area, request.image_id, request.detection_id)
+        check_clue(request.clue, row["category"])
+        with closing(connect(paths.cache)) as db:
+            try:
+                file = add_reference(
+                    db,
+                    request.clue,
+                    request.image_id,
+                    request.detection_id,
+                    paths.content,
+                    paths.crops,
+                )
+            except ValueError as error:
+                raise HTTPException(409, str(error)) from error
+        # A reference photo of a clue is, by definition, that clue.
+        action = "relabel"
+        if row["clue"] == request.clue:
+            action = "accept"
+        fields = request.model_dump()
+        if action == "accept":
+            fields.pop("clue")
+        add_label(LabelRequest(**fields, action=action))
+        return {"file": file}
 
     @app.get("/api/clues")
     def clues() -> list[dict]:
